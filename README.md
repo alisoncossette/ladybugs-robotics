@@ -61,10 +61,10 @@ The knowledge graph is not a list of corrections appended to a prompt. It is str
 
 ### Team
 
-- **Alison** -- System architect, intelligence layer, graph integration, presentation
-- **Andrea** -- Policy pipeline, SO-101 setup, data collection, ACT training, fine-tuning path
-- **Yolande** -- Neo4j, graph schema design, Cypher queries, graph visualization
-- **Sudhir** -- Perception, speech-to-text, dashboard, data collection
+- **Alison** -- Architect, system design, integration, presentation
+- **Sudhir** -- Hardware owner, SO-101 setup, calibration, perception
+- **Andrea** -- Models, ACT training, fine-tuning pipeline, policy inference
+- **Shola, Ted, Yolande** -- Context graph, Neo4j, graph schema, Cypher queries, visualization
 
 ## Setup
 

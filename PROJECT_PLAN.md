@@ -1,7 +1,7 @@
 # Ladybugs Robotics -- Physical AI Hack 2026
 
 **Event:** Physical AI Hack 2026 (Jan 31 - Feb 1, San Francisco)
-**Team:** Alison, Andrea, Yolande, Sudhir, Ted, Shola, Katie
+**Team:** Alison, Sudhir, Andrea, Shola, Ted, Yolande
 **Hardware:** SO-101 robotic arm + LeRobot
 
 ---
@@ -149,32 +149,28 @@ Record these failures. These are the test cases for the A/B comparison.
 
 ## Team Roles
 
-### Alison -- Architect, Intelligence Layer
+### Alison -- Architect
 - System design, integration
-- Environment memory (graph A path)
-- VLM comparison
-- Correction separator
+- Overall architecture and decision-making
 - Presentation
 
-### Andrea -- Policy Pipeline
+### Sudhir -- Hardware Owner
 - SO-101 setup, calibration, teleop
-- Data collection
+- Camera/perception setup
+- Hardware debugging and maintenance
+
+### Andrea -- Models
 - ACT training (and SmolVLA if time)
 - Fine-tuning pipeline (graph B path)
 - Policy inference and debugging
+- Data collection
 
-### Yolande -- Knowledge Graph
+### Shola, Ted, Yolande -- Context Graph
 - Neo4j setup
 - Graph schema (attempt graph + environment graph)
 - Cypher queries
+- Context retrieval and injection (graph A path)
 - Graph visualization for presentation
-- Assists with data collection
-
-### Sudhir -- (TBD based on background)
-- Camera/perception setup
-- Speech-to-text
-- Dashboard/visualization
-- Data collection assist
 
 ---
 
