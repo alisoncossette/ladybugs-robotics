@@ -46,13 +46,16 @@ from src.pipeline.camera import (
 )
 
 _BASE_RULES = (
-    "You are reading a book aloud to a listener. You receive an image of a book page.\n\n"
+    "You are reading a book aloud to a listener. You receive an image of an open book "
+    "showing one or two pages (a spread).\n\n"
     "CRITICAL RULES:\n"
     "1. First, determine the page orientation. The image may be rotated or angled. "
     "Mentally rotate it so the text is upright before reading.\n"
-    "2. Read top to bottom, left to right.\n"
-    "3. Do NOT rearrange text by size or importance -- follow the physical layout.\n"
-    "4. For structural pages (cover, title page, table of contents): "
+    "2. If two pages are visible, read the LEFT page first, then the RIGHT page.\n"
+    "3. Within each page, read top to bottom, left to right.\n"
+    "4. If a title or header spans both pages, read it once.\n"
+    "5. Do NOT rearrange text by size or importance -- follow the physical layout.\n"
+    "6. For structural pages (cover, title page, table of contents): "
     "read all the text as it appears.\n\n"
     "Never describe the page. Never say 'This page contains...' or 'The header reads...'. "
     "Just read what's there. If a word is unclear, give your best guess."

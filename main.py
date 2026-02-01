@@ -140,13 +140,13 @@ def _process_frame(img: bytes, page_num: int, side: str,
 def run_interactive(camera_index: int, silent: bool, mode: str) -> None:
     """Interactive loop with persistent camera stream.
 
-    The arm camera stays open. Each 'page turn' grabs a fresh frame,
-    classifies it, and reads it if appropriate.
+    One skill per cycle: arm turns page + positions camera overhead.
+    Camera grabs a wide shot of the full spread (both pages).
+    Claude Vision reads left page then right page from the single image.
 
     When the arm is wired in, [Enter] will be replaced with:
-        arm.replay("turn_page")
-        arm.replay("look_left")  -> grab left page
-        arm.replay("look_right") -> grab right page
+        solo infer --task read_book
+    which turns the page and holds the camera in position.
     """
     from src.pipeline.camera import CameraStream
 
@@ -160,8 +160,7 @@ def run_interactive(camera_index: int, silent: bool, mode: str) -> None:
     print(f"Speech: {'off' if silent else 'on'}")
     print(f"Mode:   {mode}")
     print()
-    print("Press Enter to read next page spread (left + right).")
-    print("Type 'q' to quit.")
+    print("Press Enter after each page turn. Type 'q' to quit.")
     print("-" * 50)
 
     with CameraStream(camera_index) as stream:
@@ -169,8 +168,9 @@ def run_interactive(camera_index: int, silent: bool, mode: str) -> None:
 
         while True:
             try:
+                # TODO: replace with solo infer --task read_book
                 user_input = input(
-                    "\n[Enter] Next spread  |  [q] Quit > "
+                    "\n[Enter] Read spread  |  [q] Quit > "
                 ).strip().lower()
             except (EOFError, KeyboardInterrupt):
                 print("\nDone.")
@@ -183,19 +183,11 @@ def run_interactive(camera_index: int, silent: bool, mode: str) -> None:
             page_num += 1
             print(f"\n--- Spread {page_num} ---")
 
-            # TODO: arm.replay("look_left") -- position camera over left page
-            print("Grabbing left page...")
-            left_img = stream.grab()
-            left_type = _process_frame(left_img, page_num, "left", silent, mode)
-
-            # TODO: arm.replay("look_right") -- position camera over right page
-            print("\nGrabbing right page...")
-            right_img = stream.grab()
-            right_type = _process_frame(right_img, page_num, "right", silent, mode)
+            # Grab wide shot of both pages
+            img = stream.grab()
+            _process_frame(img, page_num, "", silent, mode)
 
             print(f"\n--- End of spread {page_num} ---")
-
-            # TODO: arm.replay("turn_page") -- physically turn the page
 
 
 def main():
