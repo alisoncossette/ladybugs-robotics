@@ -3,3 +3,4 @@ anthropic
 opencv-python-headless
 elevenlabs
 python-dotenv
+rerun-sdk
