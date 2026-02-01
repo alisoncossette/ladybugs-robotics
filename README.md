@@ -22,11 +22,7 @@ The arm doesn't follow a script. It **sees** the page, **understands** what's on
 
 ## Listen: The Robot Reads a Book
 
-<div align="center">
-  <video src="test_data/full_reading_chantal.mp4" width="100%" controls></video>
-  <br>
-  <em>Press play to hear Chantal read the cover and a full content page aloud</em>
-</div>
+https://github.com/alisoncossette/ladybugs-robotics/raw/master/test_data/full_reading_chantal.mp4
 
 ## How It Works
 
