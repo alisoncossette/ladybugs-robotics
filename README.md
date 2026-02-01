@@ -14,15 +14,21 @@ We built a robotic arm that **opens a book, turns pages, and reads the content a
 
 The arm doesn't follow a script. It **sees** the page, **understands** what's on it, and **decides** how to read it -- skipping blank pages, reading titles on a cover, narrating chapter text like storytime.
 
+<div align="center">
+  <img src="open_book.gif" alt="Robot opening a book" width="270">
+  &nbsp;&nbsp;&nbsp;
+  <img src="page_turn_end.gif" alt="Robot turning a page" width="270">
+</div>
+
 ## Sample: Page In, Audio Out
 
 <div align="center">
   <img src="test_data/page.jpg" alt="Sample book page" width="400">
   <br><br>
-  🔊 <a href="test_data/page_reading.mp3">Listen to this page being read aloud</a>
+  <video src="test_data/page_reading.mp4" width="400" controls></video>
+  <br>
+  <em>Click play to hear the robot read this page aloud</em>
 </div>
-
-*The robot sees this page, extracts the text with Claude Vision, and reads it aloud through ElevenLabs.*
 
 ## How It Works
 
