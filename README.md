@@ -20,14 +20,12 @@ The arm doesn't follow a script. It **sees** the page, **understands** what's on
   <img src="page_turn_end.gif" alt="Robot turning a page" width="270">
 </div>
 
-## Sample: Page In, Audio Out
+## Listen: The Robot Reads a Book
 
 <div align="center">
-  <img src="test_data/page.jpg" alt="Sample book page" width="400">
-  <br><br>
-  <video src="test_data/page_reading.mp4" width="400" controls></video>
+  <video src="test_data/full_reading_chantal.mp4" width="100%" controls></video>
   <br>
-  <em>Click play to hear the robot read this page aloud</em>
+  <em>Press play to hear Chantal read the cover and a full content page aloud</em>
 </div>
 
 ## How It Works
