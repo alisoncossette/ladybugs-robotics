@@ -74,50 +74,30 @@ solo train --dataset ladybugs_task1 --policy act
 solo infer --robot so101 --policy act --checkpoint outputs/latest
 ```
 
-### SO-101 Setup (Standard LeRobot CLI -- alternative)
 
-```bash
-# Install LeRobot
-pip install lerobot
+### The Task: Read a Book
 
-# Calibrate
-python -m lerobot.calibrate --robot.type=so101
+The arm learns to **open a book and turn pages**, then uses a camera to **read the content**.
 
-# Teleoperate
-python -m lerobot.teleoperate --robot.type=so101
+Two sub-tasks:
+1. **Physical manipulation** -- open the book, turn pages (trained via teleop demos)
+2. **Vision/reading** -- camera captures the open page, VLM or OCR extracts the text
 
-# Record dataset
-python -m lerobot.record --robot.type=so101 --dataset.repo_id=ladybugs/task1 --episodes=10
-
-# Train ACT
-lerobot-train \
-  --dataset.repo_id=ladybugs/task1 \
-  --policy.type=act \
-  --output_dir=outputs/train/act_task1 \
-  --policy.device=cuda
-
-# Run inference
-lerobot-infer --robot.type=so101 --policy.path=outputs/train/act_task1/latest
-```
-
-### What Task?
-
-Pick something with a clear success/failure and where environment quirks matter:
-- **Puzzle piece insertion** -- pieces can be different sizes, orientations
-- **Pick and place** -- objects at different positions, weights, shapes
-- **Stacking** -- blocks of different materials, friction
-
-Decide on-site based on what objects are available.
+Environment quirks that matter:
+- **Different books** -- varying sizes, binding stiffness, page thickness
+- **Page sticking** -- some pages stick together
+- **Book position** -- shifted or rotated on the table
+- **Lighting** -- affects camera readability
 
 ---
 
 ## Step 2: Record Failures
 
-Once the policy runs autonomously, introduce environment quirks:
-- Swap a standard object for a slightly different one
-- Rotate the target
-- Change the surface (add tape, change friction)
-- Move the target position slightly
+Once the policy runs autonomously on the book task, introduce environment quirks:
+- Swap to a different book (different size, binding, page thickness)
+- Rotate or shift the book on the table
+- Use pages that stick together
+- Change lighting conditions (affects reading accuracy)
 
 Record these failures. These are the test cases for the A/B comparison.
 
@@ -183,17 +163,18 @@ Record these failures. These are the test cases for the A/B comparison.
 - [ ] Get Velda GPU access (one person, contact Solo Tech)
 
 ### Phase 2: Collect data + train
-- [ ] Choose task and objects
-- [ ] Record 5-10 teleop demos
+- [x] Task chosen: Read a Book (open, turn pages, read with camera)
+- [ ] Record 5-10 teleop demos of opening book and turning pages
 - [ ] Train ACT policy on Velda
+- [ ] Set up camera pipeline for reading page content (VLM/OCR)
 - [ ] Test autonomous execution
 
 ### Phase 3: Create failures + build paths
-- [ ] Introduce environment quirks (modified objects)
+- [ ] Introduce environment quirks (different books, lighting, positioning)
 - [ ] Record failures
-- [ ] Build context graph path (Alison)
+- [ ] Build context graph path (Shola, Ted, Yolande)
 - [ ] Build fine-tuning path (Andrea)
-- [ ] Set up Neo4j (Yolande)
+- [ ] Set up Neo4j (Shola, Ted, Yolande)
 
 ### Phase 4: Run A/B test
 - [ ] Same failure, both paths, measure results
@@ -201,9 +182,9 @@ Record these failures. These are the test cases for the A/B comparison.
 - [ ] Record everything
 
 ### Phase 5: Present
-- [ ] Graph visualization (Yolande)
+- [ ] Graph visualization (Shola, Ted, Yolande)
 - [ ] Results comparison table
-- [ ] Demo video
+- [ ] Demo video (arm reading a book)
 - [ ] Presentation
 
 ---
