@@ -162,7 +162,13 @@ Record these failures. These are the test cases for the A/B comparison.
 - [ ] Test teleop
 - [ ] Get Velda GPU access (one person, contact Solo Tech)
 
-### Phase 2: Collect data + train
+### Phase 2a: Practice run -- move a block
+- [ ] Record 5-10 teleop demos of block pick-and-place
+- [ ] Train ACT policy on Velda
+- [ ] Test autonomous execution
+- [ ] Confirm the full pipeline works: record → train → infer
+
+### Phase 2b: Real task -- read a book
 - [x] Task chosen: Read a Book (open, turn pages, read with camera)
 - [ ] Record 5-10 teleop demos of opening book and turning pages
 - [ ] Train ACT policy on Velda
