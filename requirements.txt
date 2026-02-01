@@ -1,1 +1,4 @@
 solo-cli
+anthropic
+opencv-python-headless
+pyttsx3

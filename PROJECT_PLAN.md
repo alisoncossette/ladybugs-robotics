@@ -6,42 +6,15 @@
 
 ---
 
-## The Experiment
+## The Goal
 
-**Hypothesis:** When a robot encounters environment-specific quirks that its base policy wasn't trained on, retrieving context from a knowledge graph is more efficient and/or effective than fine-tuning the policy on additional demonstrations.
-
-### A/B Test
-
-| | **A: Context Graph** | **B: Fine-Tuning** |
-|---|---|---|
-| Base policy | ACT trained on N demos | ACT trained on N demos (same) |
-| Robot fails because of environment quirk | Same failure | Same failure |
-| Human provides correction | Same correction | Same correction |
-| What happens next | Correction stored in graph. Next attempt gets language context injected into policy. No weight update. | Correction demo added to training set. Policy retrained on N+1 demos. Weights updated. |
-| Second encounter | Graph lookup. Immediate adaptation. | Baked into weights. No lookup needed. |
-| Measure: attempts to succeed | ? | ? |
-| Measure: time to adapt | ? | ? |
-| Measure: generalization to similar objects | ? | ? |
-
-### Two Graphs
-
-**Attempt Graph** -- tracks what happened across attempts:
-- Each attempt: what task, what object, what the robot did, success/failure
-- What feedback was given, by whom
-- What changed between attempts
-- The trajectory of learning
-
-**Environment Graph** -- persistent knowledge of the world:
-- Objects and their quirks
-- Locations and their properties
-- Which quirks affect which tasks
-- Similarity between objects (for generalization)
+Teach a robotic arm to **read a book**: open it, turn pages, read the content aloud using a camera and a VLM.
 
 ---
 
 ## Step 1: Get the Robots Working
 
-Everything else depends on this. No intelligence layer, no graphs, no VLM until we have:
+Everything else depends on this. We need:
 
 1. SO-101 calibrated and responding
 2. Teleoperation working (human moves leader arm, follower arm mirrors)
@@ -91,66 +64,14 @@ Environment quirks that matter:
 
 ---
 
-## Step 2: Record Failures
+## Step 2: Build the Reading Pipeline
 
-Once the policy runs autonomously on the book task, introduce environment quirks:
-- Swap to a different book (different size, binding, page thickness)
-- Rotate or shift the book on the table
-- Use pages that stick together
-- Change lighting conditions (affects reading accuracy)
+While the arm is being trained, build the software that reads pages:
+1. Camera captures a frame of the open page
+2. Claude Vision extracts the text
+3. Text-to-speech reads it aloud
 
-Record these failures. These are the test cases for the A/B comparison.
-
----
-
-## Step 3: Build Both Paths
-
-### Path A: Context Graph
-- Human provides verbal feedback about the quirk
-- Separator classifies: skill vs environment
-- Environment observation stored in graph
-- Next attempt: query graph, inject context
-- If using SmolVLA: context goes into language instruction
-- If using ACT: context displayed to human operator for validation (ACT has no language input)
-
-### Path B: Fine-Tuning
-- Human demonstrates the correct approach (teleop)
-- New demo added to dataset
-- Policy retrained (or fine-tuned from checkpoint)
-- Next attempt: run updated policy
-
-### Measure Both
-- Attempts to succeed on the quirky object
-- Wall-clock time from failure to success
-- Does knowledge transfer to similar objects?
-- Does the correction persist across sessions?
-
----
-
-## Team Roles
-
-### Alison -- Architect
-- System design, integration
-- Overall architecture and decision-making
-- Presentation
-
-### Sudhir -- Hardware Owner
-- SO-101 setup, calibration, teleop
-- Camera/perception setup
-- Hardware debugging and maintenance
-
-### Andrea -- Models
-- ACT training (and SmolVLA if time)
-- Fine-tuning pipeline (graph B path)
-- Policy inference and debugging
-- Data collection
-
-### Shola, Ted, Yolande -- Context Graph
-- Neo4j setup
-- Graph schema (attempt graph + environment graph)
-- Cypher queries
-- Context retrieval and injection (graph A path)
-- Graph visualization for presentation
+This can be tested independently with saved images or a laptop camera.
 
 ---
 
@@ -175,22 +96,14 @@ Record these failures. These are the test cases for the A/B comparison.
 - [ ] Set up camera pipeline for reading page content (VLM/OCR)
 - [ ] Test autonomous execution
 
-### Phase 3: Create failures + build paths
-- [ ] Introduce environment quirks (different books, lighting, positioning)
-- [ ] Record failures
-- [ ] Build context graph path (Shola, Ted, Yolande)
-- [ ] Build fine-tuning path (Andrea)
-- [ ] Set up Neo4j (Shola, Ted, Yolande)
+### Phase 3: Integrate arm + reading pipeline
+- [ ] Arm opens book and turns page autonomously
+- [ ] Camera captures the page
+- [ ] VLM reads the text, speaks it aloud
+- [ ] End-to-end demo: open → turn → read → speak
 
-### Phase 4: Run A/B test
-- [ ] Same failure, both paths, measure results
-- [ ] Try multiple objects/quirks
-- [ ] Record everything
-
-### Phase 5: Present
-- [ ] Graph visualization (Shola, Ted, Yolande)
-- [ ] Results comparison table
-- [ ] Demo video (arm reading a book)
+### Phase 4: Present
+- [ ] Demo video (arm reading a book aloud)
 - [ ] Presentation
 
 ---
@@ -200,14 +113,13 @@ Record these failures. These are the test cases for the A/B comparison.
 ```
 ladybugs-robotics/
   PROJECT_PLAN.md           # This file
+  SETUP.md                  # Setup instructions
   requirements.txt          # Dependencies
   src/
-    environment_memory.py   # Context graph path: separator + store + recall
-    attempt_tracker.py      # Attempt graph: logs every attempt and outcome
-    vlm_compare.py          # VLM failure vs success comparison
-    demo_loop.py            # Main loop: attempt -> fail -> correct -> retry
     config.py               # Configuration
+    pipeline/
+      camera.py             # Camera capture (arm + table)
+      page_reader.py        # VLM reading + text-to-speech
   data/                     # Teleop demos (LeRobot format)
   models/                   # Trained checkpoints
-  results/                  # A/B test measurements
 ```

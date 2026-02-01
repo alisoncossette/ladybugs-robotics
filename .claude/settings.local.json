@@ -9,7 +9,11 @@
       "Bash(pip freeze:*)",
       "Bash(gh auth status:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: project plan, README, and environment setup\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(gh repo create:*)"
+      "Bash(gh repo create:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nUpdate team roles: Alison \\(architect\\), Sudhir \\(hardware\\), Andrea \\(models\\), Shola/Ted/Yolande \\(context graph\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd book-reading task, setup instructions, remove LeRobot alternative\n\n- Task is now \"Read a Book\": arm opens book, turns pages, camera reads content\n- Added SETUP.md with step-by-step instructions for all team members\n- Removed LeRobot CLI section \\(using Solo-CLI only\\)\n- Updated phase plan and failure scenarios for book task\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
     ]
   }
 }
