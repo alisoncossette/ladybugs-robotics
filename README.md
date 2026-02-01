@@ -22,7 +22,7 @@ The arm doesn't follow a script. It **sees** the page, **understands** what's on
 
 ## Listen: The Robot Reads a Book
 
-https://github.com/user-attachments/files/24997152/full_reading_chantal.mp3
+https://github.com/user-attachments/assets/fd03ffa2-5871-4ac3-b7b6-337e29b443f9
 
 ## How It Works
 
