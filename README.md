@@ -19,10 +19,10 @@ The arm doesn't follow a script. It **sees** the page, **understands** what's on
 <div align="center">
   <img src="test_data/page.jpg" alt="Sample book page" width="400">
   <br><br>
-  <audio controls src="test_data/page_reading.mp3">Listen to the reading</audio>
+  🔊 <a href="test_data/page_reading.mp3">Listen to this page being read aloud</a>
 </div>
 
-*Claude Vision reads the page. ElevenLabs speaks it aloud.*
+*The robot sees this page, extracts the text with Claude Vision, and reads it aloud through ElevenLabs.*
 
 ## How It Works
 
