@@ -15,8 +15,10 @@ ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
 
 # ElevenLabs API
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
-ELEVENLABS_VOICE_ID = "XyeTSqCjJXIeZoB4YnOs"  # chantal
-ELEVENLABS_VOICE_NAME = "chantal"
+ELEVENLABS_VOICES = {
+    "chantal": "XyeTSqCjJXIeZoB4YnOs",
+    "kwame": "ohGUGM5CpTBCkBU3BE42",
+}
 
 # Reading settings
 DEFAULT_CAMERA = os.environ.get("DEFAULT_CAMERA", "table")  # "arm", "table", or "both"

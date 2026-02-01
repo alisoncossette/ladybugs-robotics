@@ -1,10 +1,77 @@
-"""Camera capture utility for arm-mounted and table-view cameras."""
+"""Camera capture utility for arm-mounted and table-view cameras.
+
+Supports both one-shot captures and persistent streaming via CameraStream.
+"""
 
 import base64
+import time
+
 import cv2
 
 from src.config import ARM_CAMERA_INDEX, TABLE_CAMERA_INDEX
 
+
+class CameraStream:
+    """Persistent camera stream. Keeps the feed open and grabs frames on demand.
+
+    Usage:
+        stream = CameraStream(camera_index=0)
+        stream.start()
+
+        # Grab a frame whenever the arm is in position
+        frame = stream.grab()
+
+        # When done
+        stream.stop()
+
+    Or as a context manager:
+        with CameraStream(0) as stream:
+            frame = stream.grab()
+    """
+
+    def __init__(self, camera_index: int = ARM_CAMERA_INDEX):
+        self.camera_index = camera_index
+        self._cap = None
+
+    def start(self) -> None:
+        """Open the camera stream."""
+        self._cap = cv2.VideoCapture(self.camera_index)
+        if not self._cap.isOpened():
+            raise RuntimeError(f"Cannot open camera at index {self.camera_index}")
+        # Let the camera warm up and auto-expose
+        time.sleep(0.5)
+
+    def stop(self) -> None:
+        """Release the camera."""
+        if self._cap is not None:
+            self._cap.release()
+            self._cap = None
+
+    def is_open(self) -> bool:
+        return self._cap is not None and self._cap.isOpened()
+
+    def grab(self) -> bytes:
+        """Grab a single frame from the live stream as JPEG bytes."""
+        if not self.is_open():
+            raise RuntimeError("Camera stream is not open. Call start() first.")
+        # Flush stale frames from the buffer by grabbing a few
+        for _ in range(3):
+            self._cap.grab()
+        ret, frame = self._cap.read()
+        if not ret:
+            raise RuntimeError(f"Failed to read frame from camera {self.camera_index}")
+        _, jpeg = cv2.imencode(".jpg", frame)
+        return jpeg.tobytes()
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, *args):
+        self.stop()
+
+
+# --- One-shot capture functions (kept for backward compatibility) ---
 
 def capture_frame(camera_index: int) -> bytes:
     """Capture a single frame from a camera and return it as JPEG bytes."""

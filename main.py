@@ -1,86 +1,206 @@
 """Ladybugs Robotics -- Book Reader
 
-Main orchestrator: captures a page from the camera and reads it aloud.
+SO-101 robotic arm opens a book, reads pages aloud, and turns pages.
+
+Flow:
+    1. Arm turns page -> camera captures image
+    2. Classify the page (blank, index, cover, title, toc, content)
+    3. Blank / index -> skip, turn next page automatically
+    4. Cover / title / toc / content -> read it (skim or verbose)
+    5. Repeat
 
 Usage:
-    # Interactive mode: press Enter after each page turn
+    # Interactive mode with camera
     python main.py
-
-    # Use a specific camera
     python main.py --camera arm
-    python main.py --camera table
-    python main.py --camera both
+    python main.py --mode verbose
 
-    # Test with a saved image (no camera needed)
+    # Test with a saved image
     python main.py --image test_data/page.jpg
+
+    # Test with a folder of page images (reads in filename order)
+    python main.py --folder test_data/
 
     # Silent mode (text only, no speech)
     python main.py --silent
 """
 
 import argparse
+import glob
+import os
 import sys
 
-from src.config import ANTHROPIC_API_KEY, DEFAULT_CAMERA
-from src.pipeline.page_reader import read_from_camera, read_from_file
+from src.config import ANTHROPIC_API_KEY, ARM_CAMERA_INDEX, DEFAULT_CAMERA, TABLE_CAMERA_INDEX
+from src.pipeline.page_reader import (
+    READ_TYPES,
+    SKIP_TYPES,
+    classify_page,
+    read_from_camera,
+    read_from_file,
+    read_page,
+    read_page_and_speak,
+)
 
 
-def run_interactive(camera: str, silent: bool) -> None:
-    """Interactive loop: press Enter to capture and read each page."""
+def _read_image_bytes(image_path: str, silent: bool, mode: str) -> tuple[str, str]:
+    """Classify a page and read it if appropriate. Returns (page_type, text)."""
+    with open(image_path, "rb") as f:
+        image_bytes = f.read()
+
+    page_type = classify_page(image_bytes)
+
+    if page_type in SKIP_TYPES:
+        return page_type, ""
+
+    if silent:
+        text = read_page(image_bytes, mode=mode)
+    else:
+        text = read_page_and_speak(image_bytes, silent=False, mode=mode)
+
+    return page_type, text
+
+
+def run_folder(folder_path: str, silent: bool, mode: str) -> None:
+    """Read all images in a folder in sorted order, like turning pages."""
+    patterns = ["*.jpg", "*.jpeg", "*.png"]
+    files = []
+    for pat in patterns:
+        files.extend(glob.glob(os.path.join(folder_path, pat)))
+    files.sort()
+
+    if not files:
+        print(f"No images found in {folder_path}")
+        return
+
+    print("=" * 50)
+    print("  LADYBUGS BOOK READER")
+    print("=" * 50)
+    print()
+    print(f"Pages found: {len(files)}")
+    print(f"Mode:   {mode}")
+    print(f"Speech: {'off' if silent else 'on'}")
+    print("-" * 50)
+
+    for i, filepath in enumerate(files, 1):
+        filename = os.path.basename(filepath)
+        print(f"\n--- Page {i}/{len(files)}: {filename} ---")
+
+        page_type, text = _read_image_bytes(filepath, silent, mode)
+
+        if page_type in SKIP_TYPES:
+            print(f"[{page_type} page -- skipping]")
+            continue
+
+        print(f"[{page_type}]")
+        if silent:
+            print(text)
+
+        print(f"--- End of page {i} ---")
+
+    print("\n" + "=" * 50)
+    print("  DONE")
+    print("=" * 50)
+
+
+def run_single(image_path: str, silent: bool, mode: str) -> None:
+    """Read a single image file with classification."""
+    print(f"Reading from image: {image_path}\n")
+
+    page_type, text = _read_image_bytes(image_path, silent, mode)
+
+    if page_type in SKIP_TYPES:
+        print(f"[{page_type} page -- would skip in auto mode]")
+        return
+
+    print(f"[{page_type}]")
+    if silent:
+        print(text)
+
+
+def _process_frame(img: bytes, page_num: int, side: str,
+                    silent: bool, mode: str) -> str:
+    """Classify and read a single frame. Returns the page type."""
+    page_type = classify_page(img)
+    label = f"Page {page_num} ({side})" if side else f"Page {page_num}"
+    print(f"[{label}: {page_type}]")
+
+    if page_type in SKIP_TYPES:
+        print(f"  Skipping {page_type} page...")
+        return page_type
+
+    if silent:
+        text = read_page(img, mode=mode)
+        print(text)
+    else:
+        read_page_and_speak(img, silent=False, mode=mode)
+
+    return page_type
+
+
+def run_interactive(camera_index: int, silent: bool, mode: str) -> None:
+    """Interactive loop with persistent camera stream.
+
+    The arm camera stays open. Each 'page turn' grabs a fresh frame,
+    classifies it, and reads it if appropriate.
+
+    When the arm is wired in, [Enter] will be replaced with:
+        arm.replay("turn_page")
+        arm.replay("look_left")  -> grab left page
+        arm.replay("look_right") -> grab right page
+    """
+    from src.pipeline.camera import CameraStream
+
     page_num = 0
 
     print("=" * 50)
     print("  LADYBUGS BOOK READER")
     print("=" * 50)
     print()
-    print(f"Camera: {camera}")
+    print(f"Camera index: {camera_index}")
     print(f"Speech: {'off' if silent else 'on'}")
+    print(f"Mode:   {mode}")
     print()
-    print("Press Enter to read a page. Type 'q' to quit.")
+    print("Press Enter to read next page spread (left + right).")
+    print("Type 'q' to quit.")
     print("-" * 50)
 
-    while True:
-        try:
-            user_input = input("\n[Enter] Read page  |  [q] Quit > ").strip().lower()
-        except (EOFError, KeyboardInterrupt):
-            print("\nDone.")
-            break
+    with CameraStream(camera_index) as stream:
+        print("Camera stream open.")
 
-        if user_input == "q":
-            print("Done.")
-            break
+        while True:
+            try:
+                user_input = input(
+                    "\n[Enter] Next spread  |  [q] Quit > "
+                ).strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                print("\nDone.")
+                break
 
-        page_num += 1
-        print(f"\n--- Page {page_num} ---")
-        print("Capturing image...")
+            if user_input == "q":
+                print("Done.")
+                break
 
-        try:
-            result = read_from_camera(camera, silent=silent)
-        except RuntimeError as e:
-            print(f"Camera error: {e}")
-            continue
+            page_num += 1
+            print(f"\n--- Spread {page_num} ---")
 
-        if silent and isinstance(result, dict):
-            for cam_name, text in result.items():
-                print(f"\n[{cam_name} camera]:")
-                print(text)
-        elif silent:
-            print(f"\n{result}")
+            # TODO: arm.replay("look_left") -- position camera over left page
+            print("Grabbing left page...")
+            left_img = stream.grab()
+            left_type = _process_frame(left_img, page_num, "left", silent, mode)
 
-        print(f"\n--- End of page {page_num} ---")
+            # TODO: arm.replay("look_right") -- position camera over right page
+            print("\nGrabbing right page...")
+            right_img = stream.grab()
+            right_type = _process_frame(right_img, page_num, "right", silent, mode)
 
+            print(f"\n--- End of spread {page_num} ---")
 
-def run_single(image_path: str, silent: bool) -> None:
-    """Read a single image file."""
-    print(f"Reading from image: {image_path}\n")
-    text = read_from_file(image_path, silent=silent)
-    if silent:
-        print(text)
+            # TODO: arm.replay("turn_page") -- physically turn the page
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Ladybugs Book Reader: capture a page and read it aloud"
+        description="Ladybugs Book Reader: SO-101 arm reads a book aloud"
     )
     parser.add_argument(
         "--camera",
@@ -92,12 +212,24 @@ def main():
         "--image",
         type=str,
         default=None,
-        help="Path to an image file (skips camera, reads once and exits)",
+        help="Path to a single image file",
+    )
+    parser.add_argument(
+        "--folder",
+        type=str,
+        default=None,
+        help="Path to a folder of page images (reads all in order)",
     )
     parser.add_argument(
         "--silent",
         action="store_true",
         help="Text output only, no speech",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["verbose", "skim"],
+        default="skim",
+        help="verbose = read everything, skim = titles/headings only (default: skim)",
     )
     args = parser.parse_args()
 
@@ -106,10 +238,13 @@ def main():
         print("  export ANTHROPIC_API_KEY=your-key-here", file=sys.stderr)
         sys.exit(1)
 
-    if args.image:
-        run_single(args.image, args.silent)
+    if args.folder:
+        run_folder(args.folder, args.silent, args.mode)
+    elif args.image:
+        run_single(args.image, args.silent, args.mode)
     else:
-        run_interactive(args.camera, args.silent)
+        cam_index = ARM_CAMERA_INDEX if args.camera == "arm" else TABLE_CAMERA_INDEX
+        run_interactive(cam_index, args.silent, args.mode)
 
 
 if __name__ == "__main__":
