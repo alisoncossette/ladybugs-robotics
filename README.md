@@ -1,4 +1,4 @@
-# Ladybugs Robotics
+# Ladybug Robotics
 
 ### What if a robot could read you a bedtime story?
 
