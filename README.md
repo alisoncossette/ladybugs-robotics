@@ -173,6 +173,7 @@ python main.py --camera table --mode skim
 **Ladybugs Robotics** -- Physical AI Hack 2026, San Francisco
 
 Technical Team: Alison Cossette, Sudhir Dadi, Andrea Turcu
+
 Support Team: Shola, Ted, Yolande
 
 ## License
