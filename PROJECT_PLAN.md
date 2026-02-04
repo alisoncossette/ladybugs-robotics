@@ -1,7 +1,7 @@
 # Ladybugs Robotics -- Physical AI Hack 2026
 
 **Event:** Physical AI Hack 2026 (Jan 31 - Feb 1, San Francisco)
-**Team:** Alison, Sudhir, Andrea, Shola, Ted, Yolande
+**Team:** Alison, Sudhir, Andreea, Shola, Ted, Yolande
 **Hardware:** SO-101 robotic arm + LeRobot
 
 ---

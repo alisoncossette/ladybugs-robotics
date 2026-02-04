@@ -71,7 +71,7 @@ solo calibrate --robot so101
 solo teleop --robot so101
 ```
 
-### Models (Andrea)
+### Models (Andreea)
 
 ```bash
 # Record demonstrations (5-10 episodes)
