@@ -13,12 +13,13 @@ Perception skills (camera + Claude Vision):
     - read_right   : Read the right page of an open book spread
 """
 
-from src.skills.motor import MOTOR_SKILLS
+from src.skills.motor import MOTOR_SKILLS, _build_motor_skills
 from src.skills.perception import assess_scene, read_left, read_right
 from src.skills.orchestrator import BookReaderOrchestrator
 
 __all__ = [
     "MOTOR_SKILLS",
+    "_build_motor_skills",
     "assess_scene",
     "read_left",
     "read_right",

@@ -1,14 +1,21 @@
 """Camera capture utility for arm-mounted and table-view cameras.
 
 Supports both one-shot captures and persistent streaming via CameraStream.
+Also provides FolderImageSource for dry-run / testing without hardware.
 """
 
 import base64
+import glob
+import hashlib
+import logging
+import os
 import time
 
 import cv2
 
 from src.config import ARM_CAMERA_INDEX, TABLE_CAMERA_INDEX
+
+log = logging.getLogger(__name__)
 
 
 class CameraStream:
@@ -109,3 +116,68 @@ def capture_both() -> dict[str, bytes]:
 def frame_to_base64(frame_bytes: bytes) -> str:
     """Convert JPEG bytes to a base64-encoded string."""
     return base64.b64encode(frame_bytes).decode("utf-8")
+
+
+def frame_hash(frame_bytes: bytes) -> str:
+    """Compute a quick hash of a frame for same-page detection."""
+    return hashlib.md5(frame_bytes).hexdigest()
+
+
+class FolderImageSource:
+    """Image source that reads from a folder of images instead of a camera.
+
+    Used for --dry-run mode to walk the orchestrator through a simulated
+    book without hardware. Images are returned in sorted filename order.
+    Once all images are exhausted, the last image is returned repeatedly.
+
+    Implements the same interface as CameraStream (start/stop/grab/context manager).
+    """
+
+    def __init__(self, folder_path: str):
+        self.folder_path = folder_path
+        self._files: list[str] = []
+        self._index = 0
+
+    def start(self) -> None:
+        """Load image file list from the folder."""
+        patterns = ["*.jpg", "*.jpeg", "*.png"]
+        self._files = []
+        for pat in patterns:
+            self._files.extend(glob.glob(os.path.join(self.folder_path, pat)))
+        self._files.sort()
+        self._index = 0
+
+        if not self._files:
+            raise RuntimeError(f"No images found in {self.folder_path}")
+        log.info("FolderImageSource: loaded %d images from %s",
+                 len(self._files), self.folder_path)
+
+    def stop(self) -> None:
+        """No-op for folder source."""
+        pass
+
+    def is_open(self) -> bool:
+        return len(self._files) > 0
+
+    def grab(self) -> bytes:
+        """Return the next image as JPEG bytes."""
+        if not self._files:
+            raise RuntimeError("FolderImageSource has no images. Call start() first.")
+
+        # Clamp to last image if we've gone past the end
+        idx = min(self._index, len(self._files) - 1)
+        filepath = self._files[idx]
+        self._index += 1
+
+        log.info("FolderImageSource: serving image %d/%d: %s",
+                 idx + 1, len(self._files), os.path.basename(filepath))
+
+        with open(filepath, "rb") as f:
+            return f.read()
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, *args):
+        self.stop()

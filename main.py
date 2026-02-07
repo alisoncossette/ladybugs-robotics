@@ -7,13 +7,16 @@ Six skills work together in an assess_scene-driven loop:
     Perception    : assess_scene, read_left, read_right (camera + Claude Vision)
 
 Autonomous flow:
-    1. assess_scene → determine workspace state
+    1. assess_scene -> determine workspace state
     2. Execute skill(s) based on state (open, read, turn, close)
     3. Repeat until done
 
 Usage:
     # Autonomous mode -- full skill loop with arm
     python main.py
+
+    # Dry-run mode -- walk state machine with test images, no hardware
+    python main.py --dry-run --folder test_data/ --silent
 
     # Manual mode -- press Enter to trigger each cycle (debugging)
     python main.py --manual
@@ -30,10 +33,18 @@ Usage:
 
 import argparse
 import glob
+import logging
 import os
 import sys
 
-from src.config import ANTHROPIC_API_KEY, ARM_CAMERA_INDEX, DEFAULT_CAMERA, TABLE_CAMERA_INDEX
+from src.config import (
+    ANTHROPIC_API_KEY,
+    ARM_CAMERA_INDEX,
+    DEFAULT_CAMERA,
+    TABLE_CAMERA_INDEX,
+    setup_logging,
+    validate_config,
+)
 from src.pipeline.page_reader import (
     READ_TYPES,
     SKIP_TYPES,
@@ -43,6 +54,8 @@ from src.pipeline.page_reader import (
     read_page,
     read_page_and_speak,
 )
+
+log = logging.getLogger(__name__)
 
 
 def _read_image_bytes(image_path: str, silent: bool, mode: str) -> tuple[str, str]:
@@ -72,50 +85,49 @@ def run_folder(folder_path: str, silent: bool, mode: str) -> None:
     files.sort()
 
     if not files:
-        print(f"No images found in {folder_path}")
+        log.error("No images found in %s", folder_path)
         return
 
-    print("=" * 50)
-    print("  LADYBUGS BOOK READER")
-    print("=" * 50)
-    print()
-    print(f"Pages found: {len(files)}")
-    print(f"Mode:   {mode}")
-    print(f"Speech: {'off' if silent else 'on'}")
-    print("-" * 50)
+    log.info("=" * 50)
+    log.info("  LADYBUGS BOOK READER")
+    log.info("=" * 50)
+    log.info("Pages found: %d", len(files))
+    log.info("Mode:   %s", mode)
+    log.info("Speech: %s", "off" if silent else "on")
+    log.info("-" * 50)
 
     for i, filepath in enumerate(files, 1):
         filename = os.path.basename(filepath)
-        print(f"\n--- Page {i}/{len(files)}: {filename} ---")
+        log.info("--- Page %d/%d: %s ---", i, len(files), filename)
 
         page_type, text = _read_image_bytes(filepath, silent, mode)
 
         if page_type in SKIP_TYPES:
-            print(f"[{page_type} page -- skipping]")
+            log.info("[%s page -- skipping]", page_type)
             continue
 
-        print(f"[{page_type}]")
+        log.info("[%s]", page_type)
         if silent:
             print(text)
 
-        print(f"--- End of page {i} ---")
+        log.info("--- End of page %d ---", i)
 
-    print("\n" + "=" * 50)
-    print("  DONE")
-    print("=" * 50)
+    log.info("=" * 50)
+    log.info("  DONE")
+    log.info("=" * 50)
 
 
 def run_single(image_path: str, silent: bool, mode: str) -> None:
     """Read a single image file with classification."""
-    print(f"Reading from image: {image_path}\n")
+    log.info("Reading from image: %s", image_path)
 
     page_type, text = _read_image_bytes(image_path, silent, mode)
 
     if page_type in SKIP_TYPES:
-        print(f"[{page_type} page -- would skip in auto mode]")
+        log.info("[%s page -- would skip in auto mode]", page_type)
         return
 
-    print(f"[{page_type}]")
+    log.info("[%s]", page_type)
     if silent:
         print(text)
 
@@ -125,10 +137,10 @@ def _process_frame(img: bytes, page_num: int, side: str,
     """Classify and read a single frame. Returns the page type."""
     page_type = classify_page(img)
     label = f"Page {page_num} ({side})" if side else f"Page {page_num}"
-    print(f"[{label}: {page_type}]")
+    log.info("[%s: %s]", label, page_type)
 
     if page_type in SKIP_TYPES:
-        print(f"  Skipping {page_type} page...")
+        log.info("  Skipping %s page...", page_type)
         return page_type
 
     if silent:
@@ -149,19 +161,17 @@ def run_manual(camera_index: int, silent: bool, mode: str) -> None:
 
     page_num = 0
 
-    print("=" * 50)
-    print("  LADYBUGS BOOK READER -- MANUAL MODE")
-    print("=" * 50)
-    print()
-    print(f"Camera index: {camera_index}")
-    print(f"Speech: {'off' if silent else 'on'}")
-    print(f"Mode:   {mode}")
-    print()
-    print("Press Enter after each page turn. Type 'q' to quit.")
-    print("-" * 50)
+    log.info("=" * 50)
+    log.info("  LADYBUGS BOOK READER -- MANUAL MODE")
+    log.info("=" * 50)
+    log.info("Camera index: %d", camera_index)
+    log.info("Speech: %s", "off" if silent else "on")
+    log.info("Mode:   %s", mode)
+    print("\nPress Enter after each page turn. Type 'q' to quit.")
+    log.info("-" * 50)
 
     with CameraStream(camera_index) as stream:
-        print("Camera stream open.")
+        log.info("Camera stream open.")
 
         while True:
             try:
@@ -177,26 +187,37 @@ def run_manual(camera_index: int, silent: bool, mode: str) -> None:
                 break
 
             page_num += 1
-            print(f"\n--- Spread {page_num} ---")
+            log.info("--- Spread %d ---", page_num)
 
-            # Grab wide shot of both pages
             img = stream.grab()
             _process_frame(img, page_num, "", silent, mode)
 
-            print(f"\n--- End of spread {page_num} ---")
+            log.info("--- End of spread %d ---", page_num)
 
 
 def run_autonomous(camera_index: int, silent: bool, mode: str) -> None:
-    """Autonomous mode -- full skill loop driven by assess_scene.
-
-    The orchestrator runs a perception-action loop:
-        assess_scene → open_book / read_left+read_right+turn_page / close_book
-    """
+    """Autonomous mode -- full skill loop driven by assess_scene."""
     from src.pipeline.camera import CameraStream
     from src.skills.orchestrator import BookReaderOrchestrator
 
     with CameraStream(camera_index) as stream:
         orchestrator = BookReaderOrchestrator(stream, silent=silent, mode=mode)
+        orchestrator.run()
+
+
+def run_dry_run(folder_path: str, silent: bool, mode: str) -> None:
+    """Dry-run mode -- walk the full orchestrator state machine using test images.
+
+    Motor skills are simulated. Perception skills (assess_scene, read_left,
+    read_right) run against the images for real via Claude Vision.
+    """
+    from src.pipeline.camera import FolderImageSource
+    from src.skills.orchestrator import BookReaderOrchestrator
+
+    with FolderImageSource(folder_path) as source:
+        orchestrator = BookReaderOrchestrator(
+            source, silent=silent, mode=mode, dry_run=True
+        )
         orchestrator.run()
 
 
@@ -238,14 +259,31 @@ def main():
         action="store_true",
         help="Manual mode: press Enter to trigger each cycle (no arm needed)",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Dry-run mode: simulate motor skills, use --folder images for perception",
+    )
+    parser.add_argument(
+        "--log-level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        default=None,
+        help="Override log level (default: INFO)",
+    )
     args = parser.parse_args()
 
-    if not ANTHROPIC_API_KEY:
-        print("Error: Set ANTHROPIC_API_KEY environment variable.", file=sys.stderr)
-        print("  export ANTHROPIC_API_KEY=your-key-here", file=sys.stderr)
-        sys.exit(1)
+    # Initialize logging
+    setup_logging(args.log_level or "INFO")
 
-    if args.folder:
+    # Validate config before doing anything
+    validate_config(silent=args.silent, dry_run=args.dry_run)
+
+    if args.dry_run:
+        if not args.folder:
+            log.error("--dry-run requires --folder to provide test images.")
+            sys.exit(1)
+        run_dry_run(args.folder, args.silent, args.mode)
+    elif args.folder and not args.dry_run:
         run_folder(args.folder, args.silent, args.mode)
     elif args.image:
         run_single(args.image, args.silent, args.mode)

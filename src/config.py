@@ -1,9 +1,48 @@
 """Configuration for the Ladybugs Robotics pipeline."""
 
+import logging
 import os
+import sys
+
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# -- Logging ---------------------------------------------------------------
+
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
+
+
+def setup_logging(level: str = LOG_LEVEL) -> None:
+    """Configure structured logging for the entire application."""
+    logging.basicConfig(
+        level=getattr(logging, level, logging.INFO),
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%H:%M:%S",
+        stream=sys.stdout,
+    )
+
+
+# -- Startup validation ----------------------------------------------------
+
+def validate_config(silent: bool = False, dry_run: bool = False) -> None:
+    """Check that all required environment variables are set.
+
+    Raises SystemExit with a clear message if anything is missing.
+    """
+    errors = []
+
+    if not ANTHROPIC_API_KEY:
+        errors.append("ANTHROPIC_API_KEY is not set")
+
+    if not silent and not ELEVENLABS_API_KEY:
+        errors.append("ELEVENLABS_API_KEY is not set (required unless --silent)")
+
+    if errors:
+        for e in errors:
+            print(f"  ERROR: {e}", file=sys.stderr)
+        print("\nSet these in your .env file or environment.", file=sys.stderr)
+        sys.exit(1)
 
 # Camera device indices (update based on your hardware setup)
 ARM_CAMERA_INDEX = int(os.environ.get("ARM_CAMERA_INDEX", 0))
@@ -42,3 +81,6 @@ SKILL_DURATIONS = {
     "close_book": int(os.environ.get("DURATION_CLOSE_BOOK", 15)),
     "turn_page": int(os.environ.get("DURATION_TURN_PAGE", 10)),
 }
+
+# Motor skill retry settings
+MOTOR_SKILL_MAX_RETRIES = int(os.environ.get("MOTOR_SKILL_MAX_RETRIES", 2))

@@ -7,7 +7,9 @@ drives the interactive CLI prompts automatically.
 Adapted from Physical-AI-hack-ServingU/serve_coffee.py pexpect pattern.
 """
 
+import logging
 import sys
+import time
 from dataclasses import dataclass
 
 try:
@@ -17,6 +19,7 @@ except ImportError:
     HAS_PEXPECT = False
 
 from src.config import (
+    MOTOR_SKILL_MAX_RETRIES,
     SKILL_DURATIONS,
     SKILL_POLICIES,
     SOLO_CAMERA_0_ANGLE,
@@ -24,6 +27,8 @@ from src.config import (
     SOLO_FOLLOWER_ID,
     SOLO_SELECTED_CAMERAS,
 )
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -34,14 +39,31 @@ class MotorSkill:
     policy_path: str
     duration: int  # seconds
     task_description: str
+    dry_run: bool = False
 
-    def execute(self) -> bool:
-        """Run the skill via Solo CLI. Returns True on success."""
-        print(f"[{self.name}] Executing (policy={self.policy_path}, {self.duration}s)...")
+    def execute(self, max_retries: int = MOTOR_SKILL_MAX_RETRIES) -> bool:
+        """Run the skill via Solo CLI with retry logic. Returns True on success."""
+        for attempt in range(1, max_retries + 1):
+            log.info("[%s] Attempt %d/%d (policy=%s, %ds)",
+                     self.name, attempt, max_retries, self.policy_path, self.duration)
 
-        if HAS_PEXPECT:
-            return self._execute_pexpect()
-        return self._execute_fallback()
+            if self.dry_run or not HAS_PEXPECT:
+                success = self._execute_fallback()
+            else:
+                success = self._execute_pexpect()
+
+            if success:
+                log.info("[%s] Complete.", self.name)
+                return True
+
+            if attempt < max_retries:
+                wait = 2 * attempt
+                log.warning("[%s] Failed. Retrying in %ds...", self.name, wait)
+                time.sleep(wait)
+            else:
+                log.error("[%s] Failed after %d attempts.", self.name, max_retries)
+
+        return False
 
     def _execute_pexpect(self) -> bool:
         """Drive Solo CLI interactively using pexpect."""
@@ -83,11 +105,10 @@ class MotorSkill:
             # Wait for the skill to finish
             child.expect(pexpect.EOF, timeout=self.duration + 10)
             child.close()
-            print(f"[{self.name}] Complete.")
             return True
 
         except (pexpect.TIMEOUT, pexpect.EOF) as e:
-            print(f"[{self.name}] Solo CLI error: {e}")
+            log.error("[%s] Solo CLI error: %s", self.name, e)
             try:
                 child.close()
             except Exception:
@@ -95,40 +116,45 @@ class MotorSkill:
             return False
 
     def _execute_fallback(self) -> bool:
-        """Stub for environments without pexpect (Windows dev, testing).
+        """Stub for dry-run mode or environments without pexpect.
 
         Logs what would happen and returns True so the orchestrator can
         continue its state machine during development.
         """
-        print(f"[{self.name}] pexpect not available -- simulating skill execution")
-        print(f"[{self.name}]   solo robo --inference")
-        print(f"[{self.name}]   policy: {self.policy_path}")
-        print(f"[{self.name}]   duration: {self.duration}s")
-        print(f"[{self.name}]   task: {self.task_description}")
-        print(f"[{self.name}] (simulated) Complete.")
+        label = "dry-run" if self.dry_run else "simulated"
+        log.info("[%s] (%s) solo robo --inference", self.name, label)
+        log.info("[%s]   policy: %s", self.name, self.policy_path)
+        log.info("[%s]   duration: %ds", self.name, self.duration)
+        log.info("[%s]   task: %s", self.name, self.task_description)
         return True
 
 
-# -- Defined motor skills -------------------------------------------------
-# Policy paths are placeholders. Update in .env or config after training.
+def _build_motor_skills(dry_run: bool = False) -> dict[str, MotorSkill]:
+    """Build the motor skill registry."""
+    return {
+        "open_book": MotorSkill(
+            name="open_book",
+            policy_path=SKILL_POLICIES["open_book"],
+            duration=SKILL_DURATIONS["open_book"],
+            task_description="Open the book cover",
+            dry_run=dry_run,
+        ),
+        "close_book": MotorSkill(
+            name="close_book",
+            policy_path=SKILL_POLICIES["close_book"],
+            duration=SKILL_DURATIONS["close_book"],
+            task_description="Close the book",
+            dry_run=dry_run,
+        ),
+        "turn_page": MotorSkill(
+            name="turn_page",
+            policy_path=SKILL_POLICIES["turn_page"],
+            duration=SKILL_DURATIONS["turn_page"],
+            task_description="Turn one page from right to left",
+            dry_run=dry_run,
+        ),
+    }
 
-MOTOR_SKILLS = {
-    "open_book": MotorSkill(
-        name="open_book",
-        policy_path=SKILL_POLICIES["open_book"],
-        duration=SKILL_DURATIONS["open_book"],
-        task_description="Open the book cover",
-    ),
-    "close_book": MotorSkill(
-        name="close_book",
-        policy_path=SKILL_POLICIES["close_book"],
-        duration=SKILL_DURATIONS["close_book"],
-        task_description="Close the book",
-    ),
-    "turn_page": MotorSkill(
-        name="turn_page",
-        policy_path=SKILL_POLICIES["turn_page"],
-        duration=SKILL_DURATIONS["turn_page"],
-        task_description="Turn one page from right to left",
-    ),
-}
+
+# Default motor skills (live mode)
+MOTOR_SKILLS = _build_motor_skills(dry_run=False)
