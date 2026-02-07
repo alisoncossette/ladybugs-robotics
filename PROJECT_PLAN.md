@@ -1,110 +1,49 @@
-# Ladybugs Robotics -- Physical AI Hack 2026
+# Ladybugs Robotics -- Project Plan
 
-**Event:** Physical AI Hack 2026 (Jan 31 - Feb 1, San Francisco)
+**Event origin:** Physical AI Hack 2026 (Jan 31 - Feb 1, San Francisco)
 **Team:** Alison, Sudhir, Andreea, Shola, Ted, Yolande
 **Hardware:** SO-101 robotic arm + LeRobot
+**Award:** Best Overall / Most Impressive Project
 
 ---
 
 ## The Goal
 
-Teach a robotic arm to **read a book**: open it, turn pages, read the content aloud using a camera and a VLM.
+A robotic arm that **autonomously reads a book**: assesses the scene, opens the book, turns pages, reads left then right, and closes when done -- all driven by a perception-action loop.
 
 ---
 
-## Step 1: Get the Robots Working
+## Architecture: Six Skills
 
-Everything else depends on this. We need:
+The system is built around six discrete skills -- three motor, three perception -- coordinated by an `assess_scene`-driven state machine.
 
-1. SO-101 calibrated and responding
-2. Teleoperation working (human moves leader arm, follower arm mirrors)
-3. Dataset recorded (5-10 demos of a manipulation task)
-4. ACT policy trained
-5. Arm running autonomously (even if imperfectly)
+### Motor Skills (Solo CLI + ACT policies)
 
-### SO-101 Setup (Solo-CLI -- fastest path)
+Each motor skill is a separately trained ACT policy, executed via Solo CLI's inference mode. The `pexpect` wrapper automates the interactive CLI prompts so skills can be called programmatically from the orchestrator.
 
-```bash
-# Install Solo-CLI
-pip install solo-cli
+| Skill | What it does | Policy | Duration |
+|-------|-------------|--------|----------|
+| `open_book` | Open a closed book cover | `ladybugs/open_book_ACT` | ~15s |
+| `close_book` | Close an open book | `ladybugs/close_book_ACT` | ~15s |
+| `turn_page` | Turn one page right-to-left | `ladybugs/turn_page_ACT` | ~10s |
 
-# Or clone from GitHub if pip isn't available
-# git clone <solo-cli-repo>
+### Perception Skills (Camera + Claude Vision)
 
-# Calibrate the SO-101
-solo calibrate --robot so101
+| Skill | What it does | Output |
+|-------|-------------|--------|
+| `assess_scene` | Look at the workspace, determine state | `no_book`, `book_closed`, `book_open`, `book_done` |
+| `read_left` | Read the left page of an open spread | Streamed text + TTS audio |
+| `read_right` | Read the right page of an open spread | Streamed text + TTS audio |
 
-# Test teleoperation
-solo teleop --robot so101
+### Orchestrator State Machine
 
-# Record demonstrations (5-10 episodes)
-solo record --robot so101 --dataset ladybugs_task1 --episodes 10
-
-# Train ACT policy
-solo train --dataset ladybugs_task1 --policy act
-
-# Run inference (autonomous)
-solo infer --robot so101 --policy act --checkpoint outputs/latest
 ```
-
-
-### The Task: Read a Book
-
-The arm learns to **open a book and turn pages**, then uses a camera to **read the content**.
-
-Two sub-tasks:
-1. **Physical manipulation** -- open the book, turn pages (trained via teleop demos)
-2. **Vision/reading** -- camera captures the open page, VLM or OCR extracts the text
-
-Environment quirks that matter:
-- **Different books** -- varying sizes, binding stiffness, page thickness
-- **Page sticking** -- some pages stick together
-- **Book position** -- shifted or rotated on the table
-- **Lighting** -- affects camera readability
-
----
-
-## Step 2: Build the Reading Pipeline
-
-While the arm is being trained, build the software that reads pages:
-1. Camera captures a frame of the open page
-2. Claude Vision extracts the text
-3. Text-to-speech reads it aloud
-
-This can be tested independently with saved images or a laptop camera.
-
----
-
-## Phase Plan
-
-### Phase 1: Get the arm working
-- [ ] Claim SO-101 station
-- [ ] Calibrate with Solo-CLI
-- [ ] Test teleop
-- [ ] Get Velda GPU access (one person, contact Solo Tech)
-
-### Phase 2a: Practice run -- move a block
-- [ ] Record 5-10 teleop demos of block pick-and-place
-- [ ] Train ACT policy on Velda
-- [ ] Test autonomous execution
-- [ ] Confirm the full pipeline works: record → train → infer
-
-### Phase 2b: Real task -- read a book
-- [x] Task chosen: Read a Book (open, turn pages, read with camera)
-- [ ] Record 5-10 teleop demos of opening book and turning pages
-- [ ] Train ACT policy on Velda
-- [ ] Set up camera pipeline for reading page content (VLM/OCR)
-- [ ] Test autonomous execution
-
-### Phase 3: Integrate arm + reading pipeline
-- [ ] Arm opens book and turns page autonomously
-- [ ] Camera captures the page
-- [ ] VLM reads the text, speaks it aloud
-- [ ] End-to-end demo: open → turn → read → speak
-
-### Phase 4: Present
-- [ ] Demo video (arm reading a book aloud)
-- [ ] Presentation
+assess_scene
+  → no_book      → done
+  → book_closed  → open_book → assess_scene
+  → book_open    → classify → read_left → read_right → turn_page → assess_scene
+  → book_done    → close_book → done
+```
 
 ---
 
@@ -112,14 +51,72 @@ This can be tested independently with saved images or a laptop camera.
 
 ```
 ladybugs-robotics/
-  PROJECT_PLAN.md           # This file
-  SETUP.md                  # Setup instructions
-  requirements.txt          # Dependencies
+  main.py                             # Entry point (autonomous, manual, image, folder modes)
+  requirements.txt                    # Dependencies
   src/
-    config.py               # Configuration
+    config.py                         # API keys, camera indices, Solo CLI settings, skill policies
     pipeline/
-      camera.py             # Camera capture (arm + table)
-      page_reader.py        # VLM reading + text-to-speech
-  data/                     # Teleop demos (LeRobot format)
-  models/                   # Trained checkpoints
+      camera.py                       # Persistent camera stream + one-shot capture
+      page_reader.py                  # Claude Vision reading + ElevenLabs streaming TTS
+    skills/
+      __init__.py                     # Skill exports
+      motor.py                        # Motor skill wrapper (pexpect + Solo CLI)
+      perception.py                   # assess_scene, read_left, read_right
+      orchestrator.py                 # BookReaderOrchestrator state machine
+  test_data/                          # Sample book page images for testing
 ```
+
+---
+
+## Phase Plan
+
+### Phase 1: Hackathon (COMPLETE)
+- [x] SO-101 calibrated and teleop working
+- [x] Single combined skill trained (read_book)
+- [x] Reading pipeline built (Claude Vision + ElevenLabs streaming TTS)
+- [x] Page classification (blank, index, cover, title, toc, content)
+- [x] End-to-end demo: turn → capture → classify → read → speak
+- [x] Won Best Overall / Most Impressive Project
+
+### Phase 2: Skill Architecture (COMPLETE)
+- [x] Decompose monolithic skill into 6 discrete skills
+- [x] Build motor skill wrapper with Solo CLI pexpect automation
+- [x] Build perception skills (assess_scene, read_left, read_right)
+- [x] Build orchestrator state machine
+- [x] Add autonomous mode to main.py (default) + manual mode (--manual)
+
+### Phase 3: Train Individual Motor Skills
+- [ ] Record teleop demos for open_book (5-10 episodes)
+- [ ] Record teleop demos for close_book (5-10 episodes)
+- [ ] Record teleop demos for turn_page (5-10 episodes)
+- [ ] Train separate ACT policies for each skill
+- [ ] Test each skill in isolation via Solo CLI
+- [ ] Update policy paths in config/.env
+
+### Phase 4: Integration Testing
+- [ ] Test full orchestrator loop with trained policies
+- [ ] Tune skill durations based on actual execution times
+- [ ] Test assess_scene accuracy across different book states
+- [ ] Test read_left / read_right page isolation accuracy
+- [ ] Handle edge cases (stuck pages, misaligned book, last page detection)
+
+### Phase 5: Robustness
+- [ ] Add error recovery (retry failed motor skills)
+- [ ] Add "same page" detection (re-turn if page didn't flip)
+- [ ] Add timeout/watchdog for stuck states
+- [ ] Test with different books (size, binding, page thickness)
+
+---
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| Robotic arm | SO-101 + Solo-CLI |
+| Motor learning | ACT policy (Action Chunking with Transformers) |
+| Motor execution | Solo CLI via pexpect wrapper |
+| Scene understanding | Claude Vision (Anthropic API) |
+| Page reading | Claude Vision streaming |
+| Text-to-speech | ElevenLabs streaming API |
+| Camera | OpenCV (persistent stream) |
+| Language | Python 3.10+ |

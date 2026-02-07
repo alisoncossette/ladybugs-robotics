@@ -171,13 +171,14 @@ def _audio_worker(audio_queue: queue.Queue) -> None:
         audio_queue.task_done()
 
 
-def read_page_and_speak(image_bytes: bytes, silent: bool = False, mode: str = "skim") -> str:
+def read_page_and_speak(image_bytes: bytes, silent: bool = False, mode: str = "skim",
+                        system_prompt: str | None = None) -> str:
     """Stream text from Claude Vision and speak sentences as they arrive.
 
     Uses a pre-fetch pipeline: while one sentence plays, the next is already
     being synthesized by ElevenLabs, reducing gaps between sentences.
     """
-    prompt = PROMPT_VERBOSE if mode == "verbose" else PROMPT_SKIM
+    prompt = system_prompt or (PROMPT_VERBOSE if mode == "verbose" else PROMPT_SKIM)
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     b64 = frame_to_base64(image_bytes)
 
@@ -267,9 +268,10 @@ def read_page_and_speak(image_bytes: bytes, silent: bool = False, mode: str = "s
     return full_text
 
 
-def read_page(image_bytes: bytes, mode: str = "skim") -> str:
+def read_page(image_bytes: bytes, mode: str = "skim",
+              system_prompt: str | None = None) -> str:
     """Send a page image to Claude Vision and return the extracted text (no speech)."""
-    prompt = PROMPT_VERBOSE if mode == "verbose" else PROMPT_SKIM
+    prompt = system_prompt or (PROMPT_VERBOSE if mode == "verbose" else PROMPT_SKIM)
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     b64 = frame_to_base64(image_bytes)
 

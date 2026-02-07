@@ -2,21 +2,24 @@
 
 SO-101 robotic arm opens a book, reads pages aloud, and turns pages.
 
-Flow:
-    1. Arm turns page -> camera captures image
-    2. Classify the page (blank, index, cover, title, toc, content)
-    3. Blank / index -> skip, turn next page automatically
-    4. Cover / title / toc / content -> read it (skim or verbose)
-    5. Repeat
+Six skills work together in an assess_scene-driven loop:
+    Motor skills  : open_book, close_book, turn_page (Solo CLI + ACT policies)
+    Perception    : assess_scene, read_left, read_right (camera + Claude Vision)
+
+Autonomous flow:
+    1. assess_scene → determine workspace state
+    2. Execute skill(s) based on state (open, read, turn, close)
+    3. Repeat until done
 
 Usage:
-    # Interactive mode with camera
+    # Autonomous mode -- full skill loop with arm
     python main.py
-    python main.py --camera arm
-    python main.py --mode verbose
+
+    # Manual mode -- press Enter to trigger each cycle (debugging)
+    python main.py --manual
 
     # Test with a saved image
-    python main.py --image test_data/page.jpg
+    python main.py --image test_data/page.jpg --mode verbose
 
     # Test with a folder of page images (reads in filename order)
     python main.py --folder test_data/
@@ -137,23 +140,17 @@ def _process_frame(img: bytes, page_num: int, side: str,
     return page_type
 
 
-def run_interactive(camera_index: int, silent: bool, mode: str) -> None:
-    """Interactive loop with persistent camera stream.
+def run_manual(camera_index: int, silent: bool, mode: str) -> None:
+    """Manual mode -- press Enter to trigger each read cycle.
 
-    One skill per cycle: arm turns page + positions camera overhead.
-    Camera grabs a wide shot of the full spread (both pages).
-    Claude Vision reads left page then right page from the single image.
-
-    When the arm is wired in, [Enter] will be replaced with:
-        solo infer --task read_book
-    which turns the page and holds the camera in position.
+    Useful for debugging without the arm connected.
     """
     from src.pipeline.camera import CameraStream
 
     page_num = 0
 
     print("=" * 50)
-    print("  LADYBUGS BOOK READER")
+    print("  LADYBUGS BOOK READER -- MANUAL MODE")
     print("=" * 50)
     print()
     print(f"Camera index: {camera_index}")
@@ -168,7 +165,6 @@ def run_interactive(camera_index: int, silent: bool, mode: str) -> None:
 
         while True:
             try:
-                # TODO: replace with solo infer --task read_book
                 user_input = input(
                     "\n[Enter] Read spread  |  [q] Quit > "
                 ).strip().lower()
@@ -188,6 +184,20 @@ def run_interactive(camera_index: int, silent: bool, mode: str) -> None:
             _process_frame(img, page_num, "", silent, mode)
 
             print(f"\n--- End of spread {page_num} ---")
+
+
+def run_autonomous(camera_index: int, silent: bool, mode: str) -> None:
+    """Autonomous mode -- full skill loop driven by assess_scene.
+
+    The orchestrator runs a perception-action loop:
+        assess_scene → open_book / read_left+read_right+turn_page / close_book
+    """
+    from src.pipeline.camera import CameraStream
+    from src.skills.orchestrator import BookReaderOrchestrator
+
+    with CameraStream(camera_index) as stream:
+        orchestrator = BookReaderOrchestrator(stream, silent=silent, mode=mode)
+        orchestrator.run()
 
 
 def main():
@@ -223,6 +233,11 @@ def main():
         default="skim",
         help="verbose = read everything, skim = titles/headings only (default: skim)",
     )
+    parser.add_argument(
+        "--manual",
+        action="store_true",
+        help="Manual mode: press Enter to trigger each cycle (no arm needed)",
+    )
     args = parser.parse_args()
 
     if not ANTHROPIC_API_KEY:
@@ -236,7 +251,10 @@ def main():
         run_single(args.image, args.silent, args.mode)
     else:
         cam_index = ARM_CAMERA_INDEX if args.camera == "arm" else TABLE_CAMERA_INDEX
-        run_interactive(cam_index, args.silent, args.mode)
+        if args.manual:
+            run_manual(cam_index, args.silent, args.mode)
+        else:
+            run_autonomous(cam_index, args.silent, args.mode)
 
 
 if __name__ == "__main__":

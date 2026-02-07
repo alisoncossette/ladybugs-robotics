@@ -27,72 +27,99 @@ https://github.com/user-attachments/assets/fd03ffa2-5871-4ac3-b7b6-337e29b443f9
 
 ## How It Works
 
+Six skills work together in an `assess_scene`-driven loop:
+
 ```
- +-----------+       +----------------+       +--------------+       +------------+
- |  SO-101   | ----> |  Table Camera  | ----> | Claude Vision| ----> | ElevenLabs |
- |  Arm      |       |  (wide shot)   |       |  (read page) |       |  (speak)   |
- | turn page |       |  captures      |       |  classify +  |       |  streaming  |
- |           |       |  full spread   |       |  extract text|       |  audio out  |
- +-----------+       +----------------+       +--------------+       +------------+
-      ^                                                                     |
-      |                   waits for speech to finish                        |
-      +---------------------------------------------------------------------+
+                          ┌─────────────────────────────────────────┐
+                          │          ASSESS SCENE                   │
+                          │   (camera + Claude Vision)              │
+                          └──────────┬──────────────────────────────┘
+                                     │
+              ┌──────────────────────┼──────────────────────┐
+              ▼                      ▼                      ▼
+         book_closed            book_open              book_done
+              │                      │                      │
+              ▼                      ▼                      ▼
+        ┌───────────┐    ┌───────────────────────┐   ┌───────────┐
+        │ OPEN BOOK │    │ CLASSIFY              │   │ CLOSE BOOK│
+        │  (motor)  │    │ READ LEFT  (perceive) │   │  (motor)  │
+        └─────┬─────┘    │ READ RIGHT (perceive) │   └─────┬─────┘
+              │          │ TURN PAGE  (motor)    │         │
+              │          └───────────┬───────────┘         │
+              │                      │                     │
+              └──────────────────────┼─────────────────────┘
+                                     │
+                              assess_scene again
 ```
 
-**One cycle:**
+### The Six Skills
 
-1. **Arm turns the page** and positions the camera overhead (one trained skill)
-2. **Camera grabs a wide shot** of the full two-page spread
-3. **Claude Vision classifies the page** -- is it blank, an index, a cover, a title page, table of contents, or content?
-4. **Blank / index pages are auto-skipped** -- the arm turns again immediately
-5. **Everything else gets read** -- Claude Vision extracts the text in visual reading order (top to bottom, left to right, left page first)
-6. **ElevenLabs speaks it aloud** with streaming audio and a pre-fetch pipeline so there are no gaps between sentences
-7. **Arm waits for speech to finish**, then turns the next page
+| Skill | Type | What it does |
+|-------|------|-------------|
+| `assess_scene` | Perception | Look at the workspace. Returns: `no_book`, `book_closed`, `book_open`, `book_done` |
+| `open_book` | Motor | Open a closed book cover (trained ACT policy) |
+| `close_book` | Motor | Close an open book (trained ACT policy) |
+| `turn_page` | Motor | Turn one page from right to left (trained ACT policy) |
+| `read_left` | Perception | Read the left page of a two-page spread aloud |
+| `read_right` | Perception | Read the right page of a two-page spread aloud |
+
+**Motor skills** are separately trained ACT policies executed via Solo CLI. The `pexpect` wrapper automates Solo's interactive prompts so each skill can be called programmatically.
+
+**Perception skills** use the camera + Claude Vision. `assess_scene` is a lightweight classification call (~20 tokens). `read_left` and `read_right` use streaming text extraction with a pre-fetch TTS pipeline.
 
 ## Key Features
 
-**Intelligent page classification** -- A lightweight Claude Vision call (max 20 tokens) classifies each page before deciding what to do. The robot doesn't waste time trying to read a blank page or an index.
+**Intelligent page classification** -- A lightweight Claude Vision call classifies each page before deciding what to do. The robot doesn't waste time trying to read a blank page or an index.
 
 **Two reading modes** -- `skim` (default) reads only titles, headings, and section headers. `verbose` reads everything on the page, narrated naturally like someone reading to you.
 
-**Spread-aware reading** -- The camera captures both pages at once. The prompt handles left-then-right reading order and recognizes when a title spans across both pages.
+**Left-then-right reading** -- Each page of the spread is read independently, left first then right, ensuring proper reading order.
 
-**Streaming audio pipeline** -- Three threads work in parallel: the main thread receives streamed text from Claude Vision, a pre-fetch thread sends completed sentences to ElevenLabs, and a playback thread plays audio chunks in order. The result: speech starts before the full page is even processed.
+**Streaming audio pipeline** -- Three threads work in parallel: the main thread receives streamed text from Claude Vision, a pre-fetch thread sends completed sentences to ElevenLabs, and a playback thread plays audio chunks in order. Speech starts before the full page is even processed.
 
 **Expressive voices** -- Randomly alternates between two ElevenLabs voices (Chantal and Kwame) for variety.
+
+**Autonomous operation** -- The `assess_scene` skill drives the entire loop. No human input needed once started.
 
 ## Architecture
 
 ```
 ladybugs-robotics/
-  main.py                         # Main orchestrator (3 modes)
+  main.py                         # Entry point (autonomous, manual, image, folder modes)
   src/
-    config.py                     # API keys, camera indices, voices
+    config.py                     # API keys, camera indices, Solo CLI settings, policies
     pipeline/
       camera.py                   # Persistent camera stream + one-shot capture
       page_reader.py              # Claude Vision reading + ElevenLabs speech
+    skills/
+      __init__.py                 # Skill exports
+      motor.py                    # Motor skill wrapper (pexpect + Solo CLI)
+      perception.py               # assess_scene, read_left, read_right
+      orchestrator.py             # BookReaderOrchestrator state machine
   test_data/                      # Sample book page images for testing
 ```
 
-### `main.py` -- Three ways to run
+### `main.py` -- Four ways to run
 
 | Mode | Command | Use case |
 |------|---------|----------|
-| **Interactive** | `python main.py` | Live with arm + camera. Press Enter after each page turn. |
+| **Autonomous** | `python main.py` | Full skill loop with arm. Default mode. |
+| **Manual** | `python main.py --manual` | Press Enter to trigger each cycle. For debugging without arm. |
 | **Single image** | `python main.py --image test_data/page.jpg` | Test the reading pipeline on one page. |
 | **Folder** | `python main.py --folder test_data/` | Batch-read a folder of page images in order. |
 
 All modes support `--mode verbose`, `--mode skim`, and `--silent` (text only, no speech).
 
-### `page_reader.py` -- The brain
+### `skills/` -- The skill system
 
-- `classify_page()` -- Sends image to Claude Vision with a classification prompt. Returns one of: `blank`, `index`, `cover`, `title`, `toc`, `content`.
-- `read_page_and_speak()` -- Streams text from Claude Vision and speaks sentences as they arrive using a pre-fetch audio pipeline.
-- `read_page()` -- Silent mode. Sends image, returns extracted text.
+- `motor.py` -- Wraps Solo CLI with `pexpect` to execute trained ACT policies programmatically. Falls back to simulation when pexpect is unavailable (Windows dev).
+- `perception.py` -- `assess_scene` classifies the workspace state. `read_left` and `read_right` read individual pages using Claude Vision + streaming TTS.
+- `orchestrator.py` -- `BookReaderOrchestrator` runs the perception-action loop, using `assess_scene` to decide which skill to execute next.
 
-### `camera.py` -- Persistent video stream
+### `pipeline/` -- Vision and speech
 
-`CameraStream` keeps the camera feed open between page turns (no open/close overhead). Flushes stale frames from the buffer before each grab to ensure a fresh image.
+- `page_reader.py` -- Sends images to Claude Vision with reading prompts. Streams text and speaks sentences as they arrive using a pre-fetch audio pipeline.
+- `camera.py` -- `CameraStream` keeps the camera feed open between page turns. Flushes stale frames before each grab.
 
 ## The Arm
 
@@ -105,17 +132,19 @@ solo calibrate --robot so101
 # Teleoperate (human demonstrates, arm mirrors)
 solo teleop --robot so101
 
-# Record demonstrations
-solo record --robot so101 --dataset ladybugs_read_book --episodes 10
+# Record demonstrations for each skill separately
+solo record --robot so101 --dataset ladybugs_open_book --episodes 10
+solo record --robot so101 --dataset ladybugs_turn_page --episodes 10
+solo record --robot so101 --dataset ladybugs_close_book --episodes 10
 
-# Train ACT policy (Action Chunking with Transformers)
-solo train --dataset ladybugs_read_book --policy act
+# Train ACT policies
+solo train --dataset ladybugs_open_book --policy act
+solo train --dataset ladybugs_turn_page --policy act
+solo train --dataset ladybugs_close_book --policy act
 
-# Run autonomously
+# Run autonomously (called by the orchestrator via pexpect)
 solo infer --robot so101 --policy act --checkpoint outputs/latest
 ```
-
-**Current status:** Teleop demonstrations have been recorded. The arm learns a single combined skill -- turn the page and position the camera -- rather than separate skills for each action.
 
 ## Quick Start
 
@@ -138,6 +167,11 @@ Set your API keys:
 # .env file (not committed)
 ANTHROPIC_API_KEY=your-key-here
 ELEVENLABS_API_KEY=your-key-here
+
+# Motor skill policies (update after training)
+POLICY_OPEN_BOOK=ladybugs/open_book_ACT
+POLICY_CLOSE_BOOK=ladybugs/close_book_ACT
+POLICY_TURN_PAGE=ladybugs/turn_page_ACT
 ```
 
 Test with a sample image:
@@ -152,10 +186,16 @@ Test with a folder of pages (simulates turning through a book):
 python main.py --folder test_data/ --silent
 ```
 
-Run live with camera:
+Run live with camera (manual mode, no arm needed):
 
 ```bash
-python main.py --camera table --mode skim
+python main.py --manual --camera table --mode skim
+```
+
+Run autonomous (requires trained policies + arm):
+
+```bash
+python main.py
 ```
 
 ## Tech Stack
@@ -164,7 +204,9 @@ python main.py --camera table --mode skim
 |-----------|-----------|
 | Robotic arm | SO-101 + Solo-CLI |
 | Motor learning | ACT policy (Action Chunking with Transformers) |
-| Page understanding | Claude Vision (Anthropic API) |
+| Motor execution | Solo CLI via pexpect wrapper |
+| Scene understanding | Claude Vision (Anthropic API) |
+| Page reading | Claude Vision streaming |
 | Text-to-speech | ElevenLabs streaming API |
 | Camera | OpenCV (persistent stream) |
 | Language | Python |
