@@ -85,41 +85,90 @@ Six skills work together in an `assess_scene`-driven loop:
 
 ```
 ladybugs-robotics/
-  main.py                         # Entry point (autonomous, manual, image, folder modes)
+  main.py                         # Entry point (autonomous, manual, dry-run, image, folder)
   src/
     config.py                     # API keys, camera indices, Solo CLI settings, policies
     pipeline/
-      camera.py                   # Persistent camera stream + one-shot capture
+      camera.py                   # CameraStream, FolderImageSource, frame hashing
       page_reader.py              # Claude Vision reading + ElevenLabs speech
+      archive.py                  # Save screenshots + text to timestamped sessions
     skills/
       __init__.py                 # Skill exports
-      motor.py                    # Motor skill wrapper (pexpect + Solo CLI)
+      motor.py                    # Motor skill wrapper (pexpect + Solo CLI, retry logic)
       perception.py               # assess_scene, read_left, read_right
       orchestrator.py             # BookReaderOrchestrator state machine
+  tests/
+    test_orchestrator.py          # Unit tests (state machine, motor retry, camera, config)
+    test_perception.py            # Integration tests (live Claude Vision API)
   test_data/                      # Sample book page images for testing
+  archive/                        # Saved reading sessions (git-ignored)
 ```
 
-### `main.py` -- Four ways to run
+### `main.py` -- Six ways to run
 
 | Mode | Command | Use case |
 |------|---------|----------|
 | **Autonomous** | `python main.py` | Full skill loop with arm. Default mode. |
+| **Dry-run** | `python main.py --dry-run --folder test_data/ --silent` | Walk the full state machine with test images, no hardware. |
 | **Manual** | `python main.py --manual` | Press Enter to trigger each cycle. For debugging without arm. |
 | **Single image** | `python main.py --image test_data/page.jpg` | Test the reading pipeline on one page. |
 | **Folder** | `python main.py --folder test_data/` | Batch-read a folder of page images in order. |
+| **Archive** | `python main.py --archive --silent --folder test_data/` | Save screenshots + text to `archive/`. |
 
-All modes support `--mode verbose`, `--mode skim`, and `--silent` (text only, no speech).
+All modes support `--mode verbose`, `--mode skim`, `--silent` (text only, no speech), `--archive`, and `--log-level`.
 
 ### `skills/` -- The skill system
 
-- `motor.py` -- Wraps Solo CLI with `pexpect` to execute trained ACT policies programmatically. Falls back to simulation when pexpect is unavailable (Windows dev).
+- `motor.py` -- Wraps Solo CLI with `pexpect` to execute trained ACT policies programmatically. Falls back to simulation when pexpect is unavailable (Windows dev). Includes configurable retry logic with backoff.
 - `perception.py` -- `assess_scene` classifies the workspace state. `read_left` and `read_right` read individual pages using Claude Vision + streaming TTS.
-- `orchestrator.py` -- `BookReaderOrchestrator` runs the perception-action loop, using `assess_scene` to decide which skill to execute next.
+- `orchestrator.py` -- `BookReaderOrchestrator` runs the perception-action loop, using `assess_scene` to decide which skill to execute next. Includes same-page detection (frame hashing) to catch failed page turns.
 
-### `pipeline/` -- Vision and speech
+### `pipeline/` -- Vision, speech, and archival
 
 - `page_reader.py` -- Sends images to Claude Vision with reading prompts. Streams text and speaks sentences as they arrive using a pre-fetch audio pipeline.
-- `camera.py` -- `CameraStream` keeps the camera feed open between page turns. Flushes stale frames before each grab.
+- `camera.py` -- `CameraStream` keeps the camera feed open between page turns. `FolderImageSource` serves images from a directory for dry-run/testing. `frame_hash()` enables same-page detection.
+- `archive.py` -- Saves camera frames and extracted text to timestamped session directories under `archive/`. Produces a `session.txt` with the full concatenated book text.
+
+### `tests/` -- Test suite
+
+- `test_orchestrator.py` -- 15 unit tests covering state machine transitions, motor skill retry logic, FolderImageSource, frame hashing, and startup validation. All mocked, no API calls needed.
+- `test_perception.py` -- Integration tests that call the real Claude Vision API to validate assess_scene, classify_page, and read_left/read_right. Skipped automatically if `ANTHROPIC_API_KEY` is not set.
+
+## Archive Mode
+
+Add `--archive` to any mode to save every camera frame and extracted text to disk:
+
+```bash
+python main.py --archive --folder test_data/ --silent
+```
+
+Output structure:
+
+```
+archive/
+  2026-02-07_143022/
+    spread_001_frame.jpg          # Camera frame
+    spread_001_left.txt           # Left page text
+    spread_001_right.txt          # Right page text
+    spread_001_meta.txt           # Page type + scene state
+    spread_002_frame.jpg
+    ...
+    session.txt                   # Full concatenated text of the book
+```
+
+Useful for reviewing what the robot read, debugging perception accuracy, and building a record of reading sessions.
+
+## Testing
+
+```bash
+# Run unit tests (no API key needed)
+python -m unittest tests.test_orchestrator -v
+
+# Run integration tests (requires ANTHROPIC_API_KEY)
+python -m unittest tests.test_perception -v
+```
+
+Unit tests cover orchestrator state transitions, motor skill retry logic, FolderImageSource, frame hashing, and startup config validation. Integration tests call the live Claude Vision API to verify scene assessment, page classification, and left/right page reading.
 
 ## The Arm
 
@@ -180,10 +229,22 @@ Test with a sample image:
 python main.py --image test_data/page.jpg --mode verbose
 ```
 
+Dry-run the full state machine with test images (no hardware):
+
+```bash
+python main.py --dry-run --folder test_data/ --silent
+```
+
 Test with a folder of pages (simulates turning through a book):
 
 ```bash
 python main.py --folder test_data/ --silent
+```
+
+Archive a reading session (saves screenshots + text):
+
+```bash
+python main.py --archive --folder test_data/ --silent
 ```
 
 Run live with camera (manual mode, no arm needed):

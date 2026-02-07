@@ -18,6 +18,9 @@ Usage:
     # Dry-run mode -- walk state machine with test images, no hardware
     python main.py --dry-run --folder test_data/ --silent
 
+    # Archive mode -- save screenshots + text to archive/
+    python main.py --archive --silent --folder test_data/
+
     # Manual mode -- press Enter to trigger each cycle (debugging)
     python main.py --manual
 
@@ -58,6 +61,16 @@ from src.pipeline.page_reader import (
 log = logging.getLogger(__name__)
 
 
+def _make_archive(archive_flag: bool):
+    """Create an Archive instance if --archive is enabled, else None."""
+    if not archive_flag:
+        return None
+    from src.pipeline.archive import Archive
+    archive = Archive()
+    archive.start()
+    return archive
+
+
 def _read_image_bytes(image_path: str, silent: bool, mode: str) -> tuple[str, str]:
     """Classify a page and read it if appropriate. Returns (page_type, text)."""
     with open(image_path, "rb") as f:
@@ -76,7 +89,8 @@ def _read_image_bytes(image_path: str, silent: bool, mode: str) -> tuple[str, st
     return page_type, text
 
 
-def run_folder(folder_path: str, silent: bool, mode: str) -> None:
+def run_folder(folder_path: str, silent: bool, mode: str,
+               archive=None) -> None:
     """Read all images in a folder in sorted order, like turning pages."""
     patterns = ["*.jpg", "*.jpeg", "*.png"]
     files = []
@@ -94,6 +108,8 @@ def run_folder(folder_path: str, silent: bool, mode: str) -> None:
     log.info("Pages found: %d", len(files))
     log.info("Mode:   %s", mode)
     log.info("Speech: %s", "off" if silent else "on")
+    if archive:
+        log.info("Archive: ON")
     log.info("-" * 50)
 
     for i, filepath in enumerate(files, 1):
@@ -104,20 +120,31 @@ def run_folder(folder_path: str, silent: bool, mode: str) -> None:
 
         if page_type in SKIP_TYPES:
             log.info("[%s page -- skipping]", page_type)
+            if archive:
+                with open(filepath, "rb") as f:
+                    archive.save_single(i, f.read(), page_type)
             continue
 
         log.info("[%s]", page_type)
         if silent:
             print(text)
 
+        if archive:
+            with open(filepath, "rb") as f:
+                archive.save_single(i, f.read(), page_type, text)
+
         log.info("--- End of page %d ---", i)
+
+    if archive:
+        archive.finalize()
 
     log.info("=" * 50)
     log.info("  DONE")
     log.info("=" * 50)
 
 
-def run_single(image_path: str, silent: bool, mode: str) -> None:
+def run_single(image_path: str, silent: bool, mode: str,
+               archive=None) -> None:
     """Read a single image file with classification."""
     log.info("Reading from image: %s", image_path)
 
@@ -131,28 +158,34 @@ def run_single(image_path: str, silent: bool, mode: str) -> None:
     if silent:
         print(text)
 
+    if archive:
+        with open(image_path, "rb") as f:
+            archive.save_single(1, f.read(), page_type, text)
+        archive.finalize()
+
 
 def _process_frame(img: bytes, page_num: int, side: str,
-                    silent: bool, mode: str) -> str:
-    """Classify and read a single frame. Returns the page type."""
+                    silent: bool, mode: str) -> tuple[str, str]:
+    """Classify and read a single frame. Returns (page_type, text)."""
     page_type = classify_page(img)
     label = f"Page {page_num} ({side})" if side else f"Page {page_num}"
     log.info("[%s: %s]", label, page_type)
 
     if page_type in SKIP_TYPES:
         log.info("  Skipping %s page...", page_type)
-        return page_type
+        return page_type, ""
 
     if silent:
         text = read_page(img, mode=mode)
         print(text)
     else:
-        read_page_and_speak(img, silent=False, mode=mode)
+        text = read_page_and_speak(img, silent=False, mode=mode)
 
-    return page_type
+    return page_type, text
 
 
-def run_manual(camera_index: int, silent: bool, mode: str) -> None:
+def run_manual(camera_index: int, silent: bool, mode: str,
+               archive=None) -> None:
     """Manual mode -- press Enter to trigger each read cycle.
 
     Useful for debugging without the arm connected.
@@ -167,6 +200,8 @@ def run_manual(camera_index: int, silent: bool, mode: str) -> None:
     log.info("Camera index: %d", camera_index)
     log.info("Speech: %s", "off" if silent else "on")
     log.info("Mode:   %s", mode)
+    if archive:
+        log.info("Archive: ON")
     print("\nPress Enter after each page turn. Type 'q' to quit.")
     log.info("-" * 50)
 
@@ -190,22 +225,32 @@ def run_manual(camera_index: int, silent: bool, mode: str) -> None:
             log.info("--- Spread %d ---", page_num)
 
             img = stream.grab()
-            _process_frame(img, page_num, "", silent, mode)
+            page_type, text = _process_frame(img, page_num, "", silent, mode)
+
+            if archive:
+                archive.save_single(page_num, img, page_type, text)
 
             log.info("--- End of spread %d ---", page_num)
 
+    if archive:
+        archive.finalize()
 
-def run_autonomous(camera_index: int, silent: bool, mode: str) -> None:
+
+def run_autonomous(camera_index: int, silent: bool, mode: str,
+                   archive=None) -> None:
     """Autonomous mode -- full skill loop driven by assess_scene."""
     from src.pipeline.camera import CameraStream
     from src.skills.orchestrator import BookReaderOrchestrator
 
     with CameraStream(camera_index) as stream:
-        orchestrator = BookReaderOrchestrator(stream, silent=silent, mode=mode)
+        orchestrator = BookReaderOrchestrator(
+            stream, silent=silent, mode=mode, archive=archive
+        )
         orchestrator.run()
 
 
-def run_dry_run(folder_path: str, silent: bool, mode: str) -> None:
+def run_dry_run(folder_path: str, silent: bool, mode: str,
+                archive=None) -> None:
     """Dry-run mode -- walk the full orchestrator state machine using test images.
 
     Motor skills are simulated. Perception skills (assess_scene, read_left,
@@ -216,7 +261,7 @@ def run_dry_run(folder_path: str, silent: bool, mode: str) -> None:
 
     with FolderImageSource(folder_path) as source:
         orchestrator = BookReaderOrchestrator(
-            source, silent=silent, mode=mode, dry_run=True
+            source, silent=silent, mode=mode, dry_run=True, archive=archive
         )
         orchestrator.run()
 
@@ -265,6 +310,11 @@ def main():
         help="Dry-run mode: simulate motor skills, use --folder images for perception",
     )
     parser.add_argument(
+        "--archive",
+        action="store_true",
+        help="Save screenshots and extracted text to archive/ directory",
+    )
+    parser.add_argument(
         "--log-level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         default=None,
@@ -278,21 +328,24 @@ def main():
     # Validate config before doing anything
     validate_config(silent=args.silent, dry_run=args.dry_run)
 
+    # Set up archive if requested
+    archive = _make_archive(args.archive)
+
     if args.dry_run:
         if not args.folder:
             log.error("--dry-run requires --folder to provide test images.")
             sys.exit(1)
-        run_dry_run(args.folder, args.silent, args.mode)
+        run_dry_run(args.folder, args.silent, args.mode, archive=archive)
     elif args.folder and not args.dry_run:
-        run_folder(args.folder, args.silent, args.mode)
+        run_folder(args.folder, args.silent, args.mode, archive=archive)
     elif args.image:
-        run_single(args.image, args.silent, args.mode)
+        run_single(args.image, args.silent, args.mode, archive=archive)
     else:
         cam_index = ARM_CAMERA_INDEX if args.camera == "arm" else TABLE_CAMERA_INDEX
         if args.manual:
-            run_manual(cam_index, args.silent, args.mode)
+            run_manual(cam_index, args.silent, args.mode, archive=archive)
         else:
-            run_autonomous(cam_index, args.silent, args.mode)
+            run_autonomous(cam_index, args.silent, args.mode, archive=archive)
 
 
 if __name__ == "__main__":

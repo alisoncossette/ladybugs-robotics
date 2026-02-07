@@ -12,6 +12,8 @@ State transitions:
     book_done   -> close_book -> done
 """
 
+from __future__ import annotations
+
 import logging
 
 from src.pipeline.camera import frame_hash
@@ -34,11 +36,13 @@ class BookReaderOrchestrator:
     """
 
     def __init__(self, image_source, silent: bool = False,
-                 mode: str = "verbose", dry_run: bool = False):
+                 mode: str = "verbose", dry_run: bool = False,
+                 archive=None):
         self.source = image_source
         self.silent = silent
         self.mode = mode
         self.dry_run = dry_run
+        self.archive = archive
         self.spread_count = 0
         self._last_frame_hash: str | None = None
         self._motor = _build_motor_skills(dry_run=dry_run) if dry_run else MOTOR_SKILLS
@@ -51,6 +55,8 @@ class BookReaderOrchestrator:
         log.info("=" * 50)
         log.info("Speech: %s", "off" if self.silent else "on")
         log.info("Mode:   %s", self.mode)
+        if self.archive:
+            log.info("Archive: ON")
         log.info("-" * 50)
 
         while True:
@@ -79,6 +85,9 @@ class BookReaderOrchestrator:
                 log.info("Book reading complete.")
                 break
 
+        if self.archive:
+            self.archive.finalize()
+
         log.info("=" * 50)
         log.info("  SESSION COMPLETE")
         log.info("=" * 50)
@@ -95,15 +104,29 @@ class BookReaderOrchestrator:
         page_type = classify_page(img)
         log.info("[classify] -> %s", page_type)
 
+        left_text = ""
+        right_text = ""
+
         if page_type in SKIP_TYPES:
             log.info("Skipping %s page.", page_type)
         else:
             # Read left page, then right page
             log.info("[read_left]")
-            read_left(img, silent=self.silent, mode=self.mode)
+            left_text = read_left(img, silent=self.silent, mode=self.mode)
 
             log.info("[read_right]")
-            read_right(img, silent=self.silent, mode=self.mode)
+            right_text = read_right(img, silent=self.silent, mode=self.mode)
+
+        # Archive the spread if enabled
+        if self.archive:
+            self.archive.save_spread(
+                spread_num=self.spread_count,
+                frame=img,
+                page_type=page_type,
+                scene_state="book_open",
+                left_text=left_text,
+                right_text=right_text,
+            )
 
         # Turn to the next page
         self._turn_with_verification()

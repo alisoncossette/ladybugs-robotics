@@ -51,19 +51,24 @@ assess_scene
 
 ```
 ladybugs-robotics/
-  main.py                             # Entry point (autonomous, manual, image, folder modes)
+  main.py                             # Entry point (autonomous, dry-run, manual, image, folder)
   requirements.txt                    # Dependencies
   src/
     config.py                         # API keys, camera indices, Solo CLI settings, skill policies
     pipeline/
-      camera.py                       # Persistent camera stream + one-shot capture
+      camera.py                       # CameraStream, FolderImageSource, frame hashing
       page_reader.py                  # Claude Vision reading + ElevenLabs streaming TTS
+      archive.py                      # Save screenshots + text to timestamped sessions
     skills/
       __init__.py                     # Skill exports
-      motor.py                        # Motor skill wrapper (pexpect + Solo CLI)
+      motor.py                        # Motor skill wrapper (pexpect + Solo CLI, retry logic)
       perception.py                   # assess_scene, read_left, read_right
       orchestrator.py                 # BookReaderOrchestrator state machine
+  tests/
+    test_orchestrator.py              # Unit tests (state machine, retry, camera, config)
+    test_perception.py                # Integration tests (live Claude Vision API)
   test_data/                          # Sample book page images for testing
+  archive/                            # Saved reading sessions (git-ignored)
 ```
 
 ---
@@ -78,12 +83,21 @@ ladybugs-robotics/
 - [x] End-to-end demo: turn → capture → classify → read → speak
 - [x] Won Best Overall / Most Impressive Project
 
-### Phase 2: Skill Architecture (COMPLETE)
+### Phase 2: Skill Architecture + Hardening (COMPLETE)
 - [x] Decompose monolithic skill into 6 discrete skills
 - [x] Build motor skill wrapper with Solo CLI pexpect automation
 - [x] Build perception skills (assess_scene, read_left, read_right)
 - [x] Build orchestrator state machine
 - [x] Add autonomous mode to main.py (default) + manual mode (--manual)
+- [x] Add --dry-run mode (simulate motor skills, use test images for perception)
+- [x] Add motor skill retry logic with configurable backoff
+- [x] Add same-page detection via frame hashing (catch failed turns)
+- [x] Add structured logging throughout + --log-level flag
+- [x] Add startup validation (check API keys before running)
+- [x] Write unit tests (15 tests: state machine, retry, camera, config)
+- [x] Write integration tests (live Claude Vision API, skip when no key)
+- [x] Add --archive mode (save frames + text to timestamped sessions)
+- [x] Add FolderImageSource for dry-run and testing
 
 ### Phase 3: Train Individual Motor Skills
 - [ ] Record teleop demos for open_book (5-10 episodes)
@@ -101,8 +115,8 @@ ladybugs-robotics/
 - [ ] Handle edge cases (stuck pages, misaligned book, last page detection)
 
 ### Phase 5: Robustness
-- [ ] Add error recovery (retry failed motor skills)
-- [ ] Add "same page" detection (re-turn if page didn't flip)
+- [x] Add error recovery (retry failed motor skills)
+- [x] Add "same page" detection (re-turn if page didn't flip)
 - [ ] Add timeout/watchdog for stuck states
 - [ ] Test with different books (size, binding, page thickness)
 
