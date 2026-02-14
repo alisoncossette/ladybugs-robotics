@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ladybug Robotics &mdash; Investor Deck</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap');
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --red: #c0392b;
+            --red-light: #e74c3c;
+            --red-soft: #fdf0ef;
+            --cream: #faf8f5;
+            --warm: #f5f0ea;
+            --dark: #1c1917;
+            --dark-mid: #292421;
+            --text: #3d3832;
+            --text-light: #7a726a;
+            --border: #e8e2da;
+            --white: #ffffff;
+            --green: #27ae60;
+            --green: #27ae60;
+            --green: #27ae60;
+            --serif: 'DM Serif Display', Georgia, serif;
+            --sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: var(--sans);
+            color: var(--text);
+            background: var(--dark);
+        }
+
+        /* ── SLIDE CONTAINER ── */
+        .deck { width: 100vw; height: 100vh; position: relative; }
+
+        .slide {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 4rem 6rem;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            transform: translateY(12px);
+            background: var(--cream);
+        }
+        .slide.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .slide.bg-dark { background: var(--dark); color: var(--white); }
+        .slide.bg-red { background: var(--red); color: var(--white); }
+        .slide.bg-warm { background: var(--warm); }
+
+        /* ── TYPOGRAPHY ── */
+        .slide-number {
+            position: absolute; top: 2rem; right: 3rem;
+            font-size: 0.75rem; color: var(--text-light); font-weight: 500;
+        }
+        .bg-dark .slide-number, .bg-red .slide-number { color: rgba(255,255,255,0.3); }
+
+        .eyebrow {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.14em; color: var(--red); margin-bottom: 0.8rem;
+        }
+        .bg-dark .eyebrow { color: var(--red-light); }
+        .bg-red .eyebrow { color: rgba(255,255,255,0.7); }
+
+        .slide h1 {
+            font-family: var(--serif);
+            font-size: clamp(2.4rem, 5vw, 4rem);
+            color: var(--dark); line-height: 1.1;
+            max-width: 900px; text-align: center;
+        }
+        .slide h1.hero { font-size: clamp(2.8rem, 6vw, 5rem); }
+        .bg-dark h1, .bg-red h1 { color: var(--white); }
+        .slide h1 em { font-style: normal; color: var(--red); }
+        .bg-dark h1 em { color: var(--red-light); }
+        .bg-red h1 em { color: var(--white); text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
+
+        .slide h2 {
+            font-family: var(--serif);
+            font-size: clamp(1.6rem, 3vw, 2.4rem);
+            color: var(--dark); line-height: 1.2; margin-bottom: 0.6rem;
+        }
+        .bg-dark h2 { color: var(--white); }
+
+        .subtitle {
+            font-size: 1.15rem; color: var(--text-light);
+            max-width: 640px; text-align: center;
+            line-height: 1.7; margin-top: 1rem;
+        }
+        .bg-dark .subtitle { color: rgba(255,255,255,0.55); }
+        .bg-red .subtitle { color: rgba(255,255,255,0.8); }
+
+        .slide-body { width: 100%; max-width: 960px; }
+
+        /* ── STATS ── */
+        .stats {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 2rem; margin-top: 2.5rem; max-width: 800px;
+        }
+        .stat { text-align: center; }
+        .stat .num {
+            font-family: var(--serif);
+            font-size: clamp(2.2rem, 4vw, 3.2rem);
+            color: var(--red); font-weight: 400;
+        }
+        .bg-dark .stat .num { color: var(--red-light); }
+        .stat .label { font-size: 0.88rem; color: var(--text-light); margin-top: 0.3rem; }
+        .bg-dark .stat .label { color: rgba(255,255,255,0.5); }
+
+        /* ── HALF AND HALF ── */
+        .half {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 3rem; align-items: center;
+            margin-top: 2rem; max-width: 960px; width: 100%;
+        }
+        .half-text h3 {
+            font-family: var(--serif); font-size: 1.3rem;
+            color: var(--dark); margin-bottom: 0.5rem; line-height: 1.3;
+        }
+        .half-text p {
+            font-size: 0.95rem; color: var(--text-light); line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        .bg-dark .half-text h3 { color: var(--white); }
+        .bg-dark .half-text p { color: rgba(255,255,255,0.6); }
+
+        /* ── CARDS ── */
+        .card-grid-3 {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem; margin-top: 2rem; max-width: 960px; width: 100%;
+        }
+        .card-grid-2 {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem; margin-top: 2rem; max-width: 720px; width: 100%;
+        }
+        .card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 12px; padding: 1.8rem;
+        }
+        .card .card-eyebrow {
+            font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: var(--red); margin-bottom: 0.5rem;
+        }
+        .card .card-num {
+            font-family: var(--serif); font-size: 2.2rem;
+            color: var(--red); margin-bottom: 0.3rem;
+        }
+        .card h3 {
+            font-size: 1.05rem; font-weight: 700; color: var(--dark);
+            margin-bottom: 0.4rem;
+        }
+        .card p {
+            font-size: 0.88rem; color: var(--text-light); line-height: 1.6;
+        }
+        .card-dark {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: var(--white);
+        }
+        .card-dark h3 { color: var(--white); }
+        .card-dark p { color: rgba(255,255,255,0.55); }
+        .card-dark .card-num { color: var(--red-light); }
+
+        .card-grid-2 {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem; margin-top: 2rem; max-width: 960px; width: 100%;
+        }
+
+        /* ── DEMO VISUAL ── */
+        .demo-img {
+            border-radius: 16px;
+            max-width: 100%; height: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .demo-container {
+            position: relative;
+            border-radius: 16px; overflow: hidden;
+        }
+
+        /* ── BADGE ── */
+        .badge {
+            display: inline-block;
+            background: var(--red); color: var(--white);
+            padding: 0.5rem 1.2rem; border-radius: 100px;
+            font-size: 0.78rem; font-weight: 700;
+            letter-spacing: 0.03em; margin-bottom: 1.5rem;
+        }
+
+        /* ── QUOTE ── */
+        .quote-block {
+            border-left: 3px solid var(--red);
+            padding: 1.2rem 1.5rem; margin-top: 1.5rem;
+            background: var(--red-soft); border-radius: 0 10px 10px 0;
+            max-width: 600px;
+        }
+        .quote-block p {
+            font-size: 1rem; color: var(--text); line-height: 1.7;
+            font-style: italic;
+        }
+        .quote-block .attribution {
+            font-size: 0.82rem; color: var(--text-light);
+            font-style: normal; margin-top: 0.5rem; font-weight: 600;
+        }
+
+        /* ── TEAM ── */
+        .team-row {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 2rem; margin-top: 2rem; max-width: 800px;
+        }
+        .team-member { text-align: center; }
+        .team-photo {
+            width: 320px; height: auto; border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            margin-bottom: 2rem;
+        }
+        .team-member .avatar {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: var(--warm); margin: 0 auto 1rem;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; color: var(--text-light); font-weight: 700;
+            border: 3px solid var(--border);
+        }
+        .team-member h3 { font-size: 1rem; font-weight: 700; color: var(--dark); margin-bottom: 0.2rem; }
+        .team-member p { font-size: 0.82rem; color: var(--text-light); line-height: 1.5; }
+
+        /* ── ASK ── */
+        .ask-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 2rem; margin-top: 2rem; max-width: 800px;
+        }
+        .ask-card { border-radius: 12px; padding: 2rem; text-align: center; }
+        .ask-card.primary { background: var(--red); color: var(--white); }
+        .ask-card.secondary {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--white);
+        }
+        .ask-card h3 { font-family: var(--serif); font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .ask-card p { font-size: 0.9rem; opacity: 0.85; line-height: 1.6; }
+        .ask-items { text-align: left; margin-top: 0.8rem; }
+        .ask-item {
+            font-size: 0.88rem; margin-bottom: 0.5rem;
+            padding-left: 1.4rem; position: relative; opacity: 0.85;
+        }
+        .ask-item::before {
+            content: '\2192'; position: absolute; left: 0;
+            color: rgba(255,255,255,0.4);
+        }
+
+        /* ── EXPANSION GRID ── */
+        .expand-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 1rem; margin-top: 1.5rem; max-width: 800px; width: 100%;
+        }
+        .expand-item {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px; padding: 1.2rem; text-align: center;
+        }
+        .expand-item h4 {
+            font-size: 0.88rem; color: var(--white); font-weight: 700; margin-bottom: 0.3rem;
+        }
+        .expand-item p {
+            font-size: 0.75rem; color: rgba(255,255,255,0.45); line-height: 1.4;
+        }
+        .expand-item.active-market {
+            background: var(--red); border-color: var(--red);
+        }
+        .expand-item.active-market p { color: rgba(255,255,255,0.7); }
+
+        /* ── SIDE NAV ── */
+        .side-nav {
+            position: fixed;
+            left: 1.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+        .side-nav a {
+            font-size: 0.56rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(60, 56, 50, 0.22);
+            text-decoration: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: color 0.3s;
+        }
+        .side-nav a::before {
+            content: '';
+            width: 3px; height: 3px;
+            border-radius: 50%;
+            background: currentColor;
+            flex-shrink: 0;
+            transition: transform 0.3s;
+        }
+        .side-nav a:hover { color: rgba(60, 56, 50, 0.55); }
+        .side-nav a.active { color: var(--red); }
+        .side-nav a.active::before { transform: scale(2); }
+        .side-nav.on-dark a { color: rgba(255, 255, 255, 0.18); }
+        .side-nav.on-dark a:hover { color: rgba(255, 255, 255, 0.45); }
+        .side-nav.on-dark a.active { color: var(--red-light); }
+
+        /* ── LOGO ── */
+        .logo-mark { height: 48px; width: auto; }
+        .logo-mark-sm { height: 28px; width: auto; }
+        .logo-watermark {
+            position: absolute; bottom: 2rem; left: 3rem;
+            height: 64px; width: auto;
+            opacity: 0.25;
+        }
+        .bg-dark .logo-watermark { opacity: 0.3; }
+
+        /* ── COMPETITION GRID ── */
+        .comp-grid {
+            width: 100%; max-width: 820px;
+            border-collapse: collapse; margin-top: 2rem;
+            font-size: 0.82rem;
+        }
+        .comp-grid th {
+            font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--text-light);
+            padding: 0.6rem 0.8rem; text-align: center;
+            border-bottom: 2px solid var(--border);
+        }
+        .comp-grid th:first-child { text-align: left; }
+        .comp-grid td {
+            padding: 0.7rem 0.8rem; text-align: center;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-light);
+        }
+        .comp-grid td:first-child {
+            text-align: left; font-weight: 600; color: var(--dark);
+        }
+        .comp-grid .yes { color: var(--red); font-weight: 700; }
+        .comp-grid .no { color: var(--border); }
+        .comp-grid tr.ladybug-row td {
+            background: var(--red-soft); font-weight: 700;
+            border-bottom: 2px solid var(--red);
+        }
+        .comp-grid tr.ladybug-row td:first-child { color: var(--red); }
+        .comp-grid tr.ladybug-row .yes { font-size: 1.1rem; }
+
+        /* ── MILESTONE ── */
+        .milestone-row {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem; margin-top: 1.5rem; max-width: 800px; width: 100%;
+        }
+        .milestone {
+            text-align: center; padding: 1rem;
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+            background: rgba(255,255,255,0.03);
+        }
+        .milestone .when {
+            font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: var(--red-light); margin-bottom: 0.3rem;
+        }
+        .milestone h4 { font-size: 0.88rem; color: var(--white); font-weight: 700; margin-bottom: 0.2rem; }
+        .milestone p { font-size: 0.75rem; color: rgba(255,255,255,0.45); }
+
+        /* ── CONTROLS ── */
+        .controls {
+            position: fixed; bottom: 2rem;
+            left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 1.2rem;
+            z-index: 100;
+        }
+        .controls button {
+            background: var(--dark); color: var(--white);
+            border: none; border-radius: 8px;
+            width: 44px; height: 44px;
+            font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s; opacity: 0.85;
+        }
+        .controls button:hover { background: var(--red); opacity: 1; }
+        .progress {
+            font-size: 0.78rem; color: rgba(255,255,255,0.5);
+            font-weight: 500; min-width: 3rem; text-align: center;
+        }
+
+        /* ── PRINT ── */
+        @media print {
+            html, body { overflow: visible; height: auto; }
+            .slide { position: relative; opacity: 1; pointer-events: auto; transform: none; page-break-after: always; min-height: 100vh; }
+            .controls { display: none; }
+        }
+
+        .bg-red .logo-watermark { opacity: 0.1; filter: brightness(3) saturate(0); }
+
+        @media (max-width: 768px) {
+            .slide { padding: 3rem 2rem; }
+            .half, .card-grid-3, .team-row, .ask-grid, .stats, .expand-grid {
+                grid-template-columns: 1fr;
+            }
+            .side-nav { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+    <!-- ═══ 01: TITLE ═══ -->
+    <div class="slide bg-dark active" data-slide="0">
+        <span class="slide-number">01</span>
+        <img src="logo_transparent.png" alt="Ladybug Robotics" class="logo-mark" style="margin-bottom:1.5rem;">
+        <div class="badge">Best Overall &mdash; Physical AI Hack 2026</div>
+        <h1 class="hero">Robots that <em>see, touch, and speak</em></h1>
+        <p class="subtitle">Ladybug Robotics builds physical AI &mdash; robots that perceive real-world objects, manipulate them with learned motor skills, and communicate what they find. Starting with books.</p>
+    </div>
+
+    <!-- ═══ 02: PROBLEM ═══ -->
+    <div class="slide" data-slide="1">
+        <span class="slide-number">02</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Problem</p>
+            <h2>The physical world is still offline</h2>
+            <div class="stats" style="margin-top:2rem;">
+                <div class="stat">
+                    <div class="num">2.2B</div>
+                    <div class="label">People with vision impairment worldwide <span style="font-size:0.68rem;opacity:0.6;">(WHO)</span></div>
+                </div>
+                <div class="stat">
+                    <div class="num">90%</div>
+                    <div class="label">Published materials inaccessible to blind readers <span style="font-size:0.68rem;opacity:0.6;">(WIPO)</span></div>
+                </div>
+                <div class="stat">
+                    <div class="num">$0</div>
+                    <div class="label">Autonomous solutions that touch the object</div>
+                </div>
+            </div>
+            <div class="quote-block" style="margin-top:2.5rem;">
+                <p>"My son has autism and a reading fluency disability. He needs to hold a real book while hearing it read aloud &mdash; but that requires a human reader every single time."</p>
+                <div class="attribution">&mdash; Alison Cossette, Founder</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 03: OPPORTUNITY ═══ -->
+    <div class="slide bg-warm" data-slide="2">
+        <span class="slide-number">03</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Opportunity</p>
+            <h2>Digital AI reads screens. Physical AI reads the world.</h2>
+            <div class="half" style="margin-top:2rem;">
+                <div class="half-text">
+                    <h3>No one automates physical interaction</h3>
+                    <p>Digitizing a book still means a human, a scanner, one page at a time. Same for lab notebooks, archival documents, and specimen catalogs. Manual, slow, expensive.</p>
+
+                    <h3>Current tools skip the object</h3>
+                    <p>Audiobooks, e-readers, and OCR all require someone to digitize first. Nothing looks at a physical object, figures out what to do, and acts on it autonomously.</p>
+
+                    <h3>Physical AI is the missing layer</h3>
+                    <p>We combine vision-language models with learned motor skills to create robots that interact with the real world the way humans do &mdash; see, decide, act, repeat.</p>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:1rem;">
+                    <div class="card">
+                        <div class="card-num">$5.4B</div>
+                        <h3>Vision Assistive Tech</h3>
+                        <p>Growing 12% CAGR to $11.2B by 2030 <span style="font-size:0.72rem;color:var(--text-light);opacity:0.7;">&mdash; Mordor Intelligence</span></p>
+                    </div>
+                    <div class="card">
+                        <div class="card-num">$8.7B</div>
+                        <h3>Audiobook Market</h3>
+                        <p>26% CAGR. 85% of books still have no audio version <span style="font-size:0.72rem;color:var(--text-light);opacity:0.7;">&mdash; Straits Research</span></p>
+                    </div>
+                    <div class="card">
+                        <div class="card-num">$4.4B</div>
+                        <h3>Document Scanning</h3>
+                        <p>Growing to $9.9B by 2034. Still 100% manual <span style="font-size:0.72rem;color:var(--text-light);opacity:0.7;">&mdash; GM Insights</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 04: THE SECRET ═══ -->
+    <div class="slide" data-slide="3">
+        <span class="slide-number">04</span>
+        <img src="logo_transparent.png" alt="" class="logo-mark-sm logo-watermark">
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">The Secret</p>
+            <h2>AI solved reading. No one solved touching.</h2>
+            <p style="margin-top:0.8rem; font-size:1rem; color:var(--text-light); max-width:600px; text-align:center; line-height:1.7;">
+                Vision models can read any page. TTS can speak any text. The unsolved problem is the physical part &mdash; opening, turning, handling. That&rsquo;s where we play.
+            </p>
+            <table class="comp-grid">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Works on any book</th>
+                        <th>No human needed</th>
+                        <th>Reads aloud</th>
+                        <th>Under $500</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Audiobooks</td>
+                        <td class="no">&times;</td>
+                        <td class="yes">&check;</td>
+                        <td class="yes">&check;</td>
+                        <td class="yes">&check;</td>
+                    </tr>
+                    <tr>
+                        <td>Screen Readers</td>
+                        <td class="no">&times;</td>
+                        <td class="no">&times;</td>
+                        <td class="yes">&check;</td>
+                        <td class="yes">&check;</td>
+                    </tr>
+                    <tr>
+                        <td>Volunteers</td>
+                        <td class="yes">&check;</td>
+                        <td class="no">&times;</td>
+                        <td class="yes">&check;</td>
+                        <td class="no">&times;</td>
+                    </tr>
+                    <tr>
+                        <td>Book Scanners</td>
+                        <td class="yes">&check;</td>
+                        <td class="yes">&check;</td>
+                        <td class="no">&times;</td>
+                        <td class="no">&times;</td>
+                    </tr>
+                    <tr class="ladybug-row">
+                        <td>Ladybug</td>
+                        <td class="yes">&check;</td>
+                        <td class="yes">&check;</td>
+                        <td class="yes">&check;</td>
+                        <td class="yes">&check;</td>
+                    </tr>
+                </tbody>
+            </table>
+            <!-- Flywheel -->
+            <div style="display:flex; align-items:center; gap:0.6rem; margin-top:2rem; flex-wrap:wrap; justify-content:center;">
+                <span style="background:var(--red-soft); color:var(--red); font-weight:700; font-size:0.78rem; padding:0.45rem 0.9rem; border-radius:100px;">More books read</span>
+                <span style="color:var(--border); font-size:0.9rem;">&rarr;</span>
+                <span style="background:var(--red-soft); color:var(--red); font-weight:700; font-size:0.78rem; padding:0.45rem 0.9rem; border-radius:100px;">Better motor policies</span>
+                <span style="color:var(--border); font-size:0.9rem;">&rarr;</span>
+                <span style="background:var(--red-soft); color:var(--red); font-weight:700; font-size:0.78rem; padding:0.45rem 0.9rem; border-radius:100px;">More book types handled</span>
+                <span style="color:var(--border); font-size:0.9rem;">&rarr;</span>
+                <span style="background:var(--red-soft); color:var(--red); font-weight:700; font-size:0.78rem; padding:0.45rem 0.9rem; border-radius:100px;">More users</span>
+                <span style="color:var(--red); font-size:1rem; font-weight:700;">&circlearrowright;</span>
+            </div>
+            <p style="margin-top:1.2rem; font-size:0.92rem; color:var(--text); max-width:640px; text-align:center; line-height:1.6; font-weight:500;">
+                The arm is open-source. The intelligence isn&rsquo;t.<br>
+                <span style="font-weight:400; color:var(--text-light);">Every book trains policies on new sizes, bindings, and page types &mdash; a dataset no one else is collecting.</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- ═══ 05: ONE-LINER ═══ -->
+    <div class="slide bg-red" data-slide="4">
+        <span class="slide-number">05</span>
+        <p class="eyebrow">The Product</p>
+        <h1>A robot arm that opens, turns, reads, and speaks &mdash; <em>any physical book</em></h1>
+        <p class="subtitle">Place a book. Press go. It reads aloud in any voice &mdash; even grandma&rsquo;s.</p>
+    </div>
+
+    <!-- ═══ 06: DEEP DIVE ═══ -->
+    <div class="slide" data-slide="5">
+        <span class="slide-number">06</span>
+        <div class="slide-body">
+            <p class="eyebrow">How It Works</p>
+            <h2>See &rarr; Act &rarr; Speak &rarr; Repeat</h2>
+            <div class="half" style="margin-top:1.5rem;">
+                <div class="demo-container">
+                    <img src="demo.gif" alt="Robot arm opening a book, turning pages, and reading" class="demo-img">
+                </div>
+                <div class="half-text">
+                    <h3>See</h3>
+                    <p>Claude Vision assesses the scene in under 20 tokens. Book open, closed, done? Content page or blank? The robot decides what to do next.</p>
+
+                    <h3>Act</h3>
+                    <p>Separately trained motor policies &mdash; open, turn, close &mdash; each learned from demonstration. Precise, gentle, repeatable.</p>
+
+                    <h3>Speak</h3>
+                    <p>Text streamed to ElevenLabs before the page is fully processed. Sub-second latency. Voice cloning makes it personal.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 07: WHY NOW ═══ -->
+    <div class="slide bg-dark" data-slide="6">
+        <span class="slide-number">07</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Why Now</p>
+            <h2 style="color:var(--white);text-align:center;">Three capabilities converged</h2>
+            <div style="margin-top:2.5rem; max-width:820px; width:100%;">
+                <!-- Timeline grid: rows = capabilities, columns = years -->
+                <div style="display:grid; grid-template-columns:140px repeat(4, 1fr); gap:0; align-items:stretch;">
+                    <!-- Header row -->
+                    <div></div>
+                    <div style="text-align:center; padding-bottom:1.2rem; border-bottom:2px solid rgba(255,255,255,0.08);">
+                        <div style="font-size:0.75rem; color:rgba(255,255,255,0.35); font-weight:700;">2022</div>
+                    </div>
+                    <div style="text-align:center; padding-bottom:1.2rem; border-bottom:2px solid rgba(255,255,255,0.08);">
+                        <div style="font-size:0.75rem; color:rgba(255,255,255,0.35); font-weight:700;">2023</div>
+                    </div>
+                    <div style="text-align:center; padding-bottom:1.2rem; border-bottom:2px solid rgba(255,255,255,0.08);">
+                        <div style="font-size:0.75rem; color:rgba(255,255,255,0.35); font-weight:700;">2024</div>
+                    </div>
+                    <div style="text-align:center; padding-bottom:1.2rem; border-bottom:2px solid var(--red);">
+                        <div style="font-size:0.75rem; color:var(--red-light); font-weight:700;">2025&ndash;26</div>
+                    </div>
+
+                    <!-- Row 1: TTS -->
+                    <div style="padding:1.2rem 0; display:flex; align-items:center;">
+                        <div>
+                            <div style="font-weight:700; color:var(--white); font-size:0.88rem;">Streaming TTS</div>
+                            <div style="font-size:0.72rem; color:rgba(255,255,255,0.4);">Voice cloning</div>
+                        </div>
+                    </div>
+                    <div style="padding:1rem; border-bottom:1px solid rgba(255,255,255,0.06);"></div>
+                    <div style="padding:1rem; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center;">
+                        <div style="background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.3); border-radius:8px; padding:0.5rem 0.8rem; text-align:center;">
+                            <div style="font-family:var(--serif); font-size:1.1rem; color:var(--red-light);">&lt;1s</div>
+                            <div style="font-size:0.65rem; color:rgba(255,255,255,0.45);">ElevenLabs</div>
+                        </div>
+                    </div>
+                    <div style="padding:1rem; border-bottom:1px solid rgba(255,255,255,0.06);"></div>
+                    <div style="padding:1rem; border-bottom:1px solid rgba(255,255,255,0.06);" rowspan="1"></div>
+
+                    <!-- Row 2: Vision -->
+                    <div style="padding:1.2rem 0; display:flex; align-items:center;">
+                        <div>
+                            <div style="font-weight:700; color:var(--white); font-size:0.88rem;">Vision-Language</div>
+                            <div style="font-size:0.72rem; color:rgba(255,255,255,0.4);">Replaces OCR</div>
+                        </div>
+                    </div>
+                    <div style="padding:1rem; border-bottom:1px solid rgba(255,255,255,0.06);"></div>
+                    <div style="padding:1rem; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center;">
+                        <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:0.5rem 0.8rem; text-align:center;">
+                            <div style="font-size:0.72rem; color:rgba(255,255,255,0.5);">GPT-4V</div>
+                        </div>
+                    </div>
+                    <div style="padding:1rem; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center;">
+                        <div style="background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.3); border-radius:8px; padding:0.5rem 0.8rem; text-align:center;">
+                            <div style="font-family:var(--serif); font-size:1.1rem; color:var(--red-light);">1 call</div>
+                            <div style="font-size:0.65rem; color:rgba(255,255,255,0.45);">Claude Vision</div>
+                        </div>
+                    </div>
+                    <div style="padding:1rem; border-bottom:1px solid rgba(255,255,255,0.06);"></div>
+
+                    <!-- Row 3: Arms -->
+                    <div style="padding:1.2rem 0; display:flex; align-items:center;">
+                        <div>
+                            <div style="font-weight:700; color:var(--white); font-size:0.88rem;">Robotic Arms</div>
+                            <div style="font-size:0.72rem; color:rgba(255,255,255,0.4);">Open-source</div>
+                        </div>
+                    </div>
+                    <div style="padding:1rem;"></div>
+                    <div style="padding:1rem;"></div>
+                    <div style="padding:1rem; display:flex; align-items:center; justify-content:center;">
+                        <div style="background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.3); border-radius:8px; padding:0.5rem 0.8rem; text-align:center;">
+                            <div style="font-family:var(--serif); font-size:1.1rem; color:var(--red-light);">$300</div>
+                            <div style="font-size:0.65rem; color:rgba(255,255,255,0.45);">SO-101</div>
+                        </div>
+                    </div>
+                    <div style="padding:1rem; display:flex; align-items:center; justify-content:center;">
+                        <div style="background:var(--red); border-radius:10px; padding:0.8rem 1.2rem; text-align:center; box-shadow:0 0 20px rgba(231,76,60,0.3);">
+                            <div style="font-weight:700; color:var(--white); font-size:0.85rem;">Ladybug</div>
+                            <div style="font-size:0.65rem; color:rgba(255,255,255,0.7);">All three</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="subtitle" style="margin-top:2rem;">Each existed separately. A $300 robot that sees, reads, and speaks &mdash; that's new.</p>
+        </div>
+    </div>
+
+    <!-- ═══ 08: TRACTION ═══ -->
+    <div class="slide bg-dark" data-slide="7">
+        <span class="slide-number">08</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Traction</p>
+            <h2 style="color:var(--white);text-align:center;">Built in a weekend. Won Best Overall.</h2>
+            <div class="card-grid-3" style="margin-top:2.5rem;">
+                <div class="card card-dark" style="text-align:center;">
+                    <div class="card-num">1st</div>
+                    <h3>Physical AI Hack 2026</h3>
+                    <p>Fully autonomous demo. The arm opens a book, turns pages, reads aloud, and closes it &mdash; no human in the loop.</p>
+                </div>
+                <div class="card card-dark" style="text-align:center;">
+                    <div class="card-num">6</div>
+                    <h3>Production-Ready Skills</h3>
+                    <p>Complete software stack. Perception-action state machine with retry logic, validation, and test coverage.</p>
+                </div>
+                <div class="card card-dark" style="text-align:center;">
+                    <div class="card-num">&lt;$500</div>
+                    <h3>Hardware BOM</h3>
+                    <p>$300 open-source arm, off-the-shelf camera, commodity compute. Software is the margin.</p>
+                </div>
+            </div>
+            <p class="subtitle" style="margin-top:2.5rem;">3 arms deploying across US, India &amp; Europe. Invited to PL Genesis &amp; GTC 2026. Next stop: library pilots.</p>
+        </div>
+    </div>
+
+    <!-- ═══ 09: GO TO MARKET ═══ -->
+    <div class="slide" data-slide="8">
+        <span class="slide-number">09</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Go to Market</p>
+            <h2>Start with libraries. Scale globally.</h2>
+            <p style="margin-top:0.6rem; font-size:0.95rem; color:var(--text-light); max-width:620px; text-align:center; line-height:1.6;">
+                240M children with disabilities worldwide. 1 in 7 people have a learning disability. We go where the need is greatest &mdash; and every deployment trains better motor policies.
+            </p>
+            <div class="card-grid-3" style="margin-top:2rem;">
+                <div class="card" style="border-top:3px solid var(--border);">
+                    <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-light); margin-bottom:0.5rem;">Beachhead &mdash; Month 1&ndash;6</div>
+                    <h3>Libraries (US, India, Europe)</h3>
+                    <p>Free reading stations in public library accessibility sections. ADA-mandated, grant-funded. 3 founding sites across 3 continents. Hundreds of book types. No privacy concerns.</p>
+                </div>
+                <div class="card" style="border-top:3px solid var(--red);">
+                    <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--red); margin-bottom:0.5rem;">First Revenue &mdash; Month 6&ndash;12</div>
+                    <h3>Schools &amp; Special Ed</h3>
+                    <p>IDEA Act: $14.7B/yr in US special-ed funding. South Asia: highest disability prevalence (13.6%). Open-source arm = any school can build one. 50 beta units shipped globally.</p>
+                </div>
+                <div class="card" style="border-top:3px solid var(--dark);">
+                    <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--dark); margin-bottom:0.5rem;">Scale &mdash; Year 2</div>
+                    <h3>Consumer &mdash; &ldquo;The Ladybug&rdquo;</h3>
+                    <p>DTC device with voice cloning. Grandma reads to the grandkids &mdash; even when she&rsquo;s not there. Premium device funds global access: 1 sold &rarr; 1 donated.</p>
+                </div>
+            </div>
+            <!-- Expansion chain -->
+            <div style="display:flex; align-items:center; gap:0.6rem; margin-top:2rem; flex-wrap:wrap; justify-content:center;">
+                <span style="background:var(--red); color:var(--white); font-weight:700; font-size:0.78rem; padding:0.45rem 0.9rem; border-radius:100px;">Libraries</span>
+                <span style="color:var(--border); font-size:0.9rem;">&rarr;</span>
+                <span style="background:var(--red); color:var(--white); font-weight:700; font-size:0.78rem; padding:0.45rem 0.9rem; border-radius:100px;">Schools</span>
+                <span style="color:var(--border); font-size:0.9rem;">&rarr;</span>
+                <span style="background:var(--red); color:var(--white); font-weight:700; font-size:0.78rem; padding:0.45rem 0.9rem; border-radius:100px;">Global Ed</span>
+                <span style="color:var(--border); font-size:0.9rem;">&rarr;</span>
+                <span style="background:var(--red-soft); color:var(--red); font-weight:700; font-size:0.78rem; padding:0.45rem 0.9rem; border-radius:100px;">Consumer DTC</span>
+                <span style="color:var(--border); font-size:0.9rem;">&rarr;</span>
+                <span style="background:var(--red-soft); color:var(--red); font-weight:700; font-size:0.78rem; padding:0.45rem 0.9rem; border-radius:100px;">Motor-Policy API</span>
+            </div>
+            <p style="margin-top:1rem; font-size:0.82rem; color:var(--text-light); max-width:520px; text-align:center; line-height:1.6;">
+                <span style="font-weight:600; color:var(--text);">Data policy:</span> We collect how the arm moves &mdash; not what you read.
+            </p>
+        </div>
+    </div>
+
+    <!-- ═══ 10: ICP / WHO PAYS ═══ -->
+    <div class="slide bg-dark" data-slide="9">
+        <span class="slide-number">10</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Ideal Customer</p>
+            <h2 style="color:var(--white);text-align:center;">Who pays &mdash; and what each logo unlocks</h2>
+            <div class="card-grid-3" style="margin-top:2rem;">
+                <div class="card card-dark" style="border-top:3px solid rgba(255,255,255,0.2);">
+                    <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.4); margin-bottom:0.5rem;">Tier 1 &mdash; Beachhead</div>
+                    <h3>Library Director</h3>
+                    <p>17,000 US public libraries. 300,000+ globally. Grant-funded (ADA, LSTA). One director decides &mdash; not a committee.</p>
+                    <div style="margin-top:1rem; padding-top:0.8rem; border-top:1px solid rgba(255,255,255,0.08);">
+                        <div style="font-size:0.72rem; color:var(--red-light); font-weight:700;">Logo unlocks:</div>
+                        <div style="font-size:0.78rem; color:rgba(255,255,255,0.5); line-height:1.6;">Proof of concept. Real-world data. Local press coverage. Reference for school districts.</div>
+                    </div>
+                </div>
+                <div class="card card-dark" style="border-top:3px solid var(--red);">
+                    <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--red-light); margin-bottom:0.5rem;">Tier 2 &mdash; First Revenue</div>
+                    <h3>Special Ed Director</h3>
+                    <p>IDEA Act: $14.7B/yr federal funding. IEPs mandate assistive tech. District-level buyer with budget authority and compliance pressure.</p>
+                    <div style="margin-top:1rem; padding-top:0.8rem; border-top:1px solid rgba(255,255,255,0.08);">
+                        <div style="font-size:0.72rem; color:var(--red-light); font-weight:700;">Logo unlocks:</div>
+                        <div style="font-size:0.78rem; color:rgba(255,255,255,0.5); line-height:1.6;">Government procurement pathway. Recurring per-unit revenue. Multi-school expansion.</div>
+                    </div>
+                </div>
+                <div class="card card-dark" style="border-top:3px solid var(--green);">
+                    <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--green); margin-bottom:0.5rem;">Tier 3 &mdash; Scale</div>
+                    <h3>Global Ed Programs</h3>
+                    <p>UNESCO, UNICEF, USAID, World Bank education initiatives. 240M children with disabilities globally &mdash; most with zero accessible reading tools.</p>
+                    <div style="margin-top:1rem; padding-top:0.8rem; border-top:1px solid rgba(255,255,255,0.08);">
+                        <div style="font-size:0.72rem; color:var(--green); font-weight:700;">Logo unlocks:</div>
+                        <div style="font-size:0.78rem; color:rgba(255,255,255,0.5); line-height:1.6;">International scale. $50B+ global ed-tech TAM. Platform licensing to governments.</div>
+                    </div>
+                </div>
+            </div>
+            <p class="subtitle" style="margin-top:2rem; font-size:0.88rem;">
+                <span style="color:var(--red-light); font-weight:600;">Consumer play:</span> &ldquo;The Ladybug&rdquo; &mdash; DTC device with voice cloning. Grandma reads to the grandkids. $399 + $9.99/mo. Year 2 launch.
+            </p>
+        </div>
+    </div>
+
+    <!-- ═══ 11: REVENUE & ROADMAP ═══ -->
+    <div class="slide" data-slide="10">
+        <span class="slide-number">11</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Revenue &amp; Roadmap</p>
+            <h2>The hockey stick is in education</h2>
+            <div class="card-grid-3" style="margin-top:2rem;">
+                <div class="card" style="border-top:3px solid var(--red);">
+                    <div class="card-num">$300&ndash;999</div>
+                    <h3>Device Sales</h3>
+                    <p>Gen 1: Open-source SO-101 ($300). Gen 2: Bundled kit ($500&ndash;700). Gen 3: &ldquo;The Reading Ladybug&rdquo; consumer ($799&ndash;999). Margin: 40% &rarr; 50% &rarr; 60%.</p>
+                </div>
+                <div class="card" style="border-top:3px solid var(--dark);">
+                    <div class="card-num">$9.99<span style="font-size:0.6em; color:var(--text-light);">/mo</span></div>
+                    <h3>Voice &amp; AI Subscription</h3>
+                    <p>Voice cloning, cloud AI, new motor policies, multilingual support. 90%+ gross margin. $120/yr per unit.</p>
+                </div>
+                <div class="card" style="border-top:3px solid var(--green);">
+                    <div class="card-num" style="color:var(--green);">API</div>
+                    <h3>Platform Licensing</h3>
+                    <p>Year 3+: License motor-policy intelligence. Books train policies that transfer to archives, labs, agriculture. Software margins.</p>
+                </div>
+            </div>
+            <!-- Revenue projections -->
+            <div style="margin-top:2rem; display:flex; gap:2rem; flex-wrap:wrap; justify-content:center;">
+                <div style="text-align:center;">
+                    <div style="font-family:var(--serif); font-size:1.6rem; color:var(--red);">$50K</div>
+                    <div style="font-size:0.72rem; color:var(--text-light);">Year 1 (5 library pilots)</div>
+                </div>
+                <div style="color:var(--border); font-size:1.2rem; display:flex; align-items:center;">&rarr;</div>
+                <div style="text-align:center;">
+                    <div style="font-family:var(--serif); font-size:1.6rem; color:var(--red);">$500K</div>
+                    <div style="font-size:0.72rem; color:var(--text-light);">Year 2 (50 units + schools)</div>
+                </div>
+                <div style="color:var(--border); font-size:1.2rem; display:flex; align-items:center;">&rarr;</div>
+                <div style="text-align:center;">
+                    <div style="font-family:var(--serif); font-size:1.6rem; color:var(--red);">$3M</div>
+                    <div style="font-size:0.72rem; color:var(--text-light);">Year 3 (global ed + consumer)</div>
+                </div>
+                <div style="color:var(--border); font-size:1.2rem; display:flex; align-items:center;">&rarr;</div>
+                <div style="text-align:center;">
+                    <div style="font-family:var(--serif); font-size:1.6rem; color:var(--red);">$10M+</div>
+                    <div style="font-size:0.72rem; color:var(--text-light);">Year 4 (platform licensing)</div>
+                </div>
+            </div>
+            <p style="margin-top:1.5rem; font-size:0.88rem; color:var(--text); max-width:600px; text-align:center; line-height:1.6; font-weight:500;">
+                Unit LTV: $999 device + $360 subscription (3yr) = <span style="color:var(--red);">$1,359 per consumer unit</span>
+            </p>
+            <!-- 12-Month Milestones -->
+            <div style="margin-top:2rem; max-width:800px; width:100%;">
+                <div style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-light); margin-bottom:0.8rem; text-align:center;">12-Month Milestones</div>
+                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:0.8rem;">
+                    <div style="text-align:center; padding:0.8rem; border-radius:8px; background:var(--warm);">
+                        <div style="font-size:0.68rem; font-weight:700; color:var(--red);">Month 3</div>
+                        <div style="font-size:0.78rem; color:var(--text); font-weight:600;">80% reliability</div>
+                        <div style="font-size:0.68rem; color:var(--text-light);">Multi-book types</div>
+                    </div>
+                    <div style="text-align:center; padding:0.8rem; border-radius:8px; background:var(--warm);">
+                        <div style="font-size:0.68rem; font-weight:700; color:var(--red);">Month 6</div>
+                        <div style="font-size:0.78rem; color:var(--text); font-weight:600;">3 library pilots</div>
+                        <div style="font-size:0.68rem; color:var(--text-light);">Real-world data</div>
+                    </div>
+                    <div style="text-align:center; padding:0.8rem; border-radius:8px; background:var(--warm);">
+                        <div style="font-size:0.68rem; font-weight:700; color:var(--red);">Month 9</div>
+                        <div style="font-size:0.78rem; color:var(--text); font-weight:600;">First school revenue</div>
+                        <div style="font-size:0.68rem; color:var(--text-light);">IDEA-funded units</div>
+                    </div>
+                    <div style="text-align:center; padding:0.8rem; border-radius:8px; background:var(--warm);">
+                        <div style="font-size:0.68rem; font-weight:700; color:var(--red);">Month 12</div>
+                        <div style="font-size:0.78rem; color:var(--text); font-weight:600;">50 units + intl pilot</div>
+                        <div style="font-size:0.68rem; color:var(--text-light);">Path to $500K ARR</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Partners -->
+            <div style="display:flex; align-items:center; gap:0.8rem; margin-top:1.8rem; flex-wrap:wrap; justify-content:center;">
+                <span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-light);">Partners &amp; Ecosystem:</span>
+                <span style="font-size:0.78rem; font-weight:600; color:var(--text); background:var(--warm); padding:0.3rem 0.7rem; border-radius:100px;">Anthropic</span>
+                <span style="font-size:0.78rem; font-weight:600; color:var(--text); background:var(--warm); padding:0.3rem 0.7rem; border-radius:100px;">ElevenLabs</span>
+                <span style="font-size:0.78rem; font-weight:600; color:var(--text); background:var(--warm); padding:0.3rem 0.7rem; border-radius:100px;">HuggingFace</span>
+                <span style="font-size:0.78rem; font-weight:600; color:var(--text); background:var(--warm); padding:0.3rem 0.7rem; border-radius:100px;">AFB</span>
+                <span style="font-size:0.78rem; font-weight:600; color:var(--text); background:var(--warm); padding:0.3rem 0.7rem; border-radius:100px;">NVIDIA Inception</span>
+                <span style="font-size:0.78rem; font-weight:600; color:var(--text); background:var(--warm); padding:0.3rem 0.7rem; border-radius:100px;">Protocol Labs</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 12: TEAM ═══ -->
+    <div class="slide bg-warm" data-slide="11">
+        <span class="slide-number">12</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Team</p>
+            <h2>Mission-driven. Engineer-led.</h2>
+            <img src="Screenshot 2026-02-03 113618.png" alt="Ladybug Robotics team at Physical AI Hack 2026" class="team-photo">
+            <div class="team-row">
+                <div class="team-member">
+                    <div class="avatar">AC</div>
+                    <h3>Alison Cossette</h3>
+                    <p>Vision pipeline, orchestrator, product strategy. AI researcher, Master&rsquo;s-level AI at Northwestern. Architected the six-skill system and built the perception stack at Physical AI Hack 2026.</p>
+                </div>
+                <div class="team-member">
+                    <div class="avatar">SD</div>
+                    <h3>Sudhir Dadi</h3>
+                    <p>Motor policies, voice pipeline, arm integration. Director of Engineering at Lumen with deep voice and audio expertise, manages 40 engineers. Takes prototypes to production.</p>
+                </div>
+                <div class="team-member">
+                    <div class="avatar">AT</div>
+                    <h3>Andreea Turcu</h3>
+                    <p>Runs data &mdash; owns the dataset pipeline from calibration through quality assurance. Head of Global Training at H2O.ai. The policies are only as good as the data.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 13: ASK ═══ -->
+    <div class="slide bg-dark" data-slide="12">
+        <span class="slide-number">13</span>
+        <p class="eyebrow">Our Ask</p>
+        <h1>From hackathon demo to <em>physical AI platform</em></h1>
+        <div class="ask-grid" style="margin-top:2rem;">
+            <div class="ask-card primary">
+                <h3>$500K Pre-Seed</h3>
+                <p>5 library pilots. 50 beta units to schools. Consumer prototype with voice cloning. Path to $500K ARR by Year 2.</p>
+            </div>
+            <div class="ask-card secondary">
+                <h3>Use of Funds</h3>
+                <div class="ask-items">
+                    <div class="ask-item">Multi-site training: 3 locations, 100+ books, robust motor policies</div>
+                    <div class="ask-item">Library pilots: 5 public libraries, real-world validation</div>
+                    <div class="ask-item">Consumer prototype: &ldquo;The Ladybug&rdquo; with voice cloning</div>
+                    <div class="ask-item">Manufacture &amp; ship 50 beta units to schools &amp; families</div>
+                </div>
+            </div>
+        </div>
+        <p class="subtitle" style="margin-top:2rem;">
+            <img src="logo_transparent.png" alt="Ladybug Robotics" class="logo-mark-sm" style="vertical-align:middle; margin-right:0.5rem; opacity:0.6;">
+            alison@ladybug.bot
+        </p>
+    </div>
+
+</div>
+
+<!-- SIDE NAV -->
+<nav class="side-nav" id="side-nav">
+    <a data-go="0">Ladybug</a>
+    <a data-go="1">Problem</a>
+    <a data-go="2">Opportunity</a>
+    <a data-go="3">The Secret</a>
+    <a data-go="4">Product</a>
+    <a data-go="5">How It Works</a>
+    <a data-go="6">Why Now</a>
+    <a data-go="7">Traction</a>
+    <a data-go="8">Go to Market</a>
+    <a data-go="9">ICP</a>
+    <a data-go="10">Revenue</a>
+    <a data-go="11">Team</a>
+    <a data-go="12">Ask</a>
+</nav>
+
+<!-- CONTROLS -->
+<div class="controls">
+    <button id="prev-btn" aria-label="Previous slide">&larr;</button>
+    <span class="progress" id="progress">1 / 13</span>
+    <button id="next-btn" aria-label="Next slide">&rarr;</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+const navLinks = document.querySelectorAll('#side-nav a');
+const nav = document.getElementById('side-nav');
+let current = 0;
+
+function goTo(n) {
+    if (n < 0 || n >= total) return;
+    slides[current].classList.remove('active');
+    current = n;
+    slides[current].classList.add('active');
+    document.getElementById('progress').textContent = (current + 1) + ' / ' + total;
+
+    // Update side nav
+    navLinks.forEach((a, i) => a.classList.toggle('active', i === current));
+    const isDark = slides[current].classList.contains('bg-dark') || slides[current].classList.contains('bg-red');
+    nav.classList.toggle('on-dark', isDark);
+}
+
+// Bottom controls
+document.getElementById('prev-btn').addEventListener('click', () => goTo(current - 1));
+document.getElementById('next-btn').addEventListener('click', () => goTo(current + 1));
+
+// Side nav clicks
+nav.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-go]');
+    if (a) goTo(parseInt(a.dataset.go));
+});
+
+// Keyboard
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(current - 1); }
+    if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+    if (e.key === 'End') { e.preventDefault(); goTo(total - 1); }
+});
+
+// Touch
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) { diff > 0 ? goTo(current + 1) : goTo(current - 1); }
+});
+
+// Inject watermark logo on every slide that doesn't have one
+slides.forEach((s, i) => {
+    if (s.querySelector('.logo-mark')) return;  // title slide has prominent logo
+    if (s.querySelector('.logo-watermark')) return;
+    const img = document.createElement('img');
+    img.src = 'logo_transparent.png';
+    img.alt = '';
+    img.className = 'logo-mark-sm logo-watermark';
+    s.appendChild(img);
+});
+
+// Initialize nav state
+goTo(0);
+</script>
+
+</body>
+</html>

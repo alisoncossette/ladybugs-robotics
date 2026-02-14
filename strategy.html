@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ladybug Robotics &mdash; Founders Working Session</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap');
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --red: #c0392b;
+            --red-light: #e74c3c;
+            --red-soft: #fdf0ef;
+            --cream: #faf8f5;
+            --warm: #f5f0ea;
+            --dark: #1c1917;
+            --dark-mid: #292421;
+            --text: #3d3832;
+            --text-light: #7a726a;
+            --border: #e8e2da;
+            --white: #ffffff;
+            --green: #27ae60;
+            --blue: #2980b9;
+            --yellow: #f39c12;
+            --serif: 'DM Serif Display', Georgia, serif;
+            --sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        html, body { height: 100%; overflow: hidden; }
+        body { font-family: var(--sans); color: var(--text); background: var(--dark); }
+
+        .deck { width: 100vw; height: 100vh; position: relative; }
+
+        .slide {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 4rem 6rem;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            transform: translateY(12px);
+            background: var(--cream);
+        }
+        .slide.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .slide.bg-dark { background: var(--dark); color: var(--white); }
+        .slide.bg-red { background: var(--red); color: var(--white); }
+        .slide.bg-warm { background: var(--warm); }
+
+        .slide-number {
+            position: absolute; top: 2rem; right: 3rem;
+            font-size: 0.75rem; color: var(--text-light); font-weight: 500;
+        }
+        .bg-dark .slide-number { color: rgba(255,255,255,0.3); }
+        .bg-red .slide-number { color: rgba(255,255,255,0.3); }
+
+        .confidential {
+            position: absolute; top: 2rem; left: 3rem;
+            font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--red); opacity: 0.6;
+        }
+        .bg-dark .confidential { color: var(--red-light); }
+
+        /* ── TIME MARKER ── */
+        .time-marker {
+            position: absolute; bottom: 2rem; right: 3rem;
+            font-size: 0.72rem; font-weight: 700;
+            color: var(--text-light); opacity: 0.5;
+            font-variant-numeric: tabular-nums;
+        }
+        .bg-dark .time-marker { color: rgba(255,255,255,0.25); }
+        .bg-red .time-marker { color: rgba(255,255,255,0.25); }
+
+        .eyebrow {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.14em; color: var(--red); margin-bottom: 0.8rem;
+        }
+        .bg-dark .eyebrow { color: var(--red-light); }
+        .bg-red .eyebrow { color: rgba(255,255,255,0.7); }
+
+        .slide h1 {
+            font-family: var(--serif);
+            font-size: clamp(2.4rem, 5vw, 4rem);
+            color: var(--dark); line-height: 1.1;
+            max-width: 900px; text-align: center;
+        }
+        .slide h1.hero { font-size: clamp(2.8rem, 6vw, 5rem); }
+        .bg-dark h1, .bg-red h1 { color: var(--white); }
+        .slide h1 em { font-style: normal; color: var(--red); }
+        .bg-dark h1 em { color: var(--red-light); }
+        .bg-red h1 em { color: var(--white); text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
+
+        .slide h2 {
+            font-family: var(--serif);
+            font-size: clamp(1.6rem, 3vw, 2.4rem);
+            color: var(--dark); line-height: 1.2; margin-bottom: 0.6rem;
+        }
+        .bg-dark h2 { color: var(--white); }
+
+        .subtitle {
+            font-size: 1.15rem; color: var(--text-light);
+            max-width: 640px; text-align: center;
+            line-height: 1.7; margin-top: 1rem;
+        }
+        .bg-dark .subtitle { color: rgba(255,255,255,0.55); }
+        .bg-red .subtitle { color: rgba(255,255,255,0.8); }
+
+        .slide-body { width: 100%; max-width: 960px; }
+
+        /* ── CARDS ── */
+        .card-grid-2 {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 1.5rem; margin-top: 2rem; max-width: 960px; width: 100%;
+        }
+        .card-grid-3 {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem; margin-top: 2rem; max-width: 960px; width: 100%;
+        }
+        .card-grid-4 {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 1.2rem; margin-top: 2rem; max-width: 960px; width: 100%;
+        }
+        .card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 12px; padding: 1.8rem;
+        }
+        .card h3 {
+            font-size: 1.05rem; font-weight: 700; color: var(--dark);
+            margin-bottom: 0.4rem;
+        }
+        .card p {
+            font-size: 0.88rem; color: var(--text-light); line-height: 1.6;
+        }
+        .card-dark {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: var(--white);
+        }
+        .card-dark h3 { color: var(--white); }
+        .card-dark p { color: rgba(255,255,255,0.6); }
+
+        /* ── OPTION CARDS ── */
+        .option-card {
+            border-top: 3px solid var(--border);
+            position: relative;
+        }
+        .option-card .option-label {
+            font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: var(--text-light); margin-bottom: 0.8rem;
+        }
+
+        .pro { color: var(--green); font-size: 0.82rem; }
+        .con { color: var(--red); font-size: 0.82rem; }
+        .pro::before { content: '+ '; font-weight: 700; }
+        .con::before { content: '- '; font-weight: 700; }
+
+        /* ── DISCUSSION PROMPT ── */
+        .discuss {
+            margin-top: 2rem; padding: 1.2rem 1.5rem;
+            border-left: 3px solid var(--red);
+            background: var(--red-soft); border-radius: 0 10px 10px 0;
+            max-width: 700px; width: 100%;
+        }
+        .discuss p {
+            font-size: 0.95rem; color: var(--text); line-height: 1.6; font-style: italic;
+        }
+        .discuss .prompt-label {
+            font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: var(--red); margin-bottom: 0.3rem;
+            font-style: normal;
+        }
+        .bg-dark .discuss {
+            background: rgba(231,76,60,0.1); border-left-color: var(--red-light);
+        }
+        .bg-dark .discuss p { color: rgba(255,255,255,0.7); }
+        .bg-dark .discuss .prompt-label { color: var(--red-light); }
+        .bg-warm .discuss { background: var(--white); }
+
+        /* ── DECISION TABLE ── */
+        .decision-table {
+            width: 100%; max-width: 900px; border-collapse: collapse;
+            margin-top: 2rem; font-size: 0.85rem;
+        }
+        .decision-table th {
+            font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; padding: 0.6rem 1rem;
+            border-bottom: 2px solid var(--border); text-align: left;
+        }
+        .decision-table td {
+            padding: 0.7rem 1rem; border-bottom: 1px solid var(--border);
+            color: var(--text); vertical-align: top;
+        }
+        .decision-table td:first-child { font-weight: 600; color: var(--dark); }
+        .tag {
+            display: inline-block; font-size: 0.68rem; font-weight: 700;
+            padding: 0.2rem 0.6rem; border-radius: 100px;
+            text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .tag-ac { background: var(--red-soft); color: var(--red); }
+        .tag-sd { background: #ebf5fb; color: var(--blue); }
+        .tag-at { background: #e8f8f5; color: var(--green); }
+        .tag-all { background: var(--warm); color: var(--text); }
+
+        /* ── DARK TABLE ── */
+        .bg-dark .decision-table th {
+            color: rgba(255,255,255,0.4);
+            border-bottom-color: rgba(255,255,255,0.1);
+        }
+        .bg-dark .decision-table td {
+            color: rgba(255,255,255,0.7);
+            border-bottom-color: rgba(255,255,255,0.06);
+        }
+        .bg-dark .decision-table td:first-child { color: var(--white); }
+
+        /* ── REPO TABLE ── */
+        .repo-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem; margin-top: 1.5rem; max-width: 900px; width: 100%;
+        }
+        .repo-card {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px; padding: 1.4rem;
+        }
+        .repo-card h4 {
+            font-size: 0.88rem; color: var(--white); font-weight: 700; margin-bottom: 0.4rem;
+            font-family: monospace;
+        }
+        .repo-card .repo-type {
+            font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; margin-bottom: 0.6rem;
+        }
+        .repo-card p { font-size: 0.82rem; color: rgba(255,255,255,0.5); line-height: 1.5; }
+        .repo-card ul {
+            list-style: none; font-size: 0.82rem; color: rgba(255,255,255,0.5); line-height: 1.8;
+        }
+        .repo-card ul li::before { content: '\2192 '; color: rgba(255,255,255,0.25); }
+
+        /* ── AGENDA ── */
+        .agenda-list {
+            list-style: none; margin-top: 2rem; max-width: 640px; width: 100%;
+        }
+        .agenda-list li {
+            display: flex; align-items: baseline; gap: 1rem;
+            padding: 0.7rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+            font-size: 1rem;
+        }
+        .agenda-list .num {
+            font-family: var(--serif); font-size: 1.3rem;
+            color: var(--red-light); min-width: 2rem; text-align: right;
+        }
+        .agenda-list .topic { color: var(--white); font-weight: 600; }
+        .agenda-list .time {
+            margin-left: auto; font-size: 0.75rem;
+            color: rgba(255,255,255,0.3); font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ── GROUND RULES ── */
+        .rule-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 2rem; margin-top: 2rem; max-width: 800px; width: 100%;
+        }
+        .rule-col h3 {
+            font-family: var(--serif); font-size: 1.3rem;
+            margin-bottom: 1rem; line-height: 1.3;
+        }
+        .rule-col ul {
+            list-style: none; font-size: 0.92rem; line-height: 2;
+        }
+        .rule-col ul li::before {
+            content: ''; display: inline-block;
+            width: 6px; height: 6px; border-radius: 50%;
+            margin-right: 0.8rem; vertical-align: 0.15em;
+        }
+        .rule-col.yes ul li::before { background: var(--green); }
+        .rule-col.no ul li::before { background: var(--red); }
+
+        /* ── SIDE NAV ── */
+        .side-nav {
+            position: fixed; left: 1.8rem; top: 50%;
+            transform: translateY(-50%); z-index: 100;
+            display: flex; flex-direction: column; gap: 0.45rem;
+        }
+        .side-nav a {
+            font-size: 0.56rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.08em; color: rgba(60, 56, 50, 0.22);
+            text-decoration: none; cursor: pointer;
+            display: flex; align-items: center; gap: 0.4rem;
+            transition: color 0.3s;
+        }
+        .side-nav a::before {
+            content: ''; width: 3px; height: 3px; border-radius: 50%;
+            background: currentColor; flex-shrink: 0; transition: transform 0.3s;
+        }
+        .side-nav a:hover { color: rgba(60, 56, 50, 0.55); }
+        .side-nav a.active { color: var(--red); }
+        .side-nav a.active::before { transform: scale(2); }
+        .side-nav.on-dark a { color: rgba(255, 255, 255, 0.18); }
+        .side-nav.on-dark a:hover { color: rgba(255, 255, 255, 0.45); }
+        .side-nav.on-dark a.active { color: var(--red-light); }
+
+        /* ── LOGO ── */
+        .logo-mark { height: 48px; width: auto; }
+        .logo-watermark {
+            position: absolute; bottom: 2rem; left: 3rem;
+            height: 48px; width: auto; opacity: 0.15;
+        }
+        .bg-dark .logo-watermark { opacity: 0.2; }
+
+        /* ── CONTROLS ── */
+        .controls {
+            position: fixed; bottom: 2rem;
+            left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 1.2rem;
+            z-index: 100;
+        }
+        .controls button {
+            background: var(--dark); color: var(--white);
+            border: none; border-radius: 8px;
+            width: 44px; height: 44px;
+            font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s; opacity: 0.85;
+        }
+        .controls button:hover { background: var(--red); opacity: 1; }
+        .progress {
+            font-size: 0.78rem; color: rgba(255,255,255,0.5);
+            font-weight: 500; min-width: 3rem; text-align: center;
+        }
+
+        /* ── DRAFT WATERMARK ── */
+        .draft-watermark {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 6rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 0.2em; color: rgba(0,0,0,0.04);
+            pointer-events: none; z-index: 0;
+        }
+        .bg-dark .draft-watermark, .bg-red .draft-watermark { color: rgba(255,255,255,0.05); }
+
+        @media (max-width: 768px) {
+            .slide { padding: 3rem 2rem; }
+            .card-grid-2, .card-grid-3, .card-grid-4, .repo-grid, .rule-grid { grid-template-columns: 1fr; }
+            .side-nav { display: none; }
+        }
+
+        @media print {
+            html, body { overflow: visible; height: auto; }
+            .slide { position: relative; opacity: 1; pointer-events: auto; transform: none; page-break-after: always; min-height: 100vh; }
+            .controls, .side-nav { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+    <!-- ═══ 01: TITLE ═══ -->
+    <div class="slide bg-dark active" data-slide="0">
+        <span class="slide-number">01</span>
+        <span class="confidential">Internal &mdash; Founders Only</span>
+        <span class="time-marker">0:00</span>
+        <img src="logo_transparent.png" alt="Ladybug Robotics" class="logo-mark" style="margin-bottom:1.5rem;">
+        <h1 class="hero">Founders <em>Working Session</em></h1>
+        <p class="subtitle">One hour. Ten decisions. Walk out aligned.</p>
+        <p style="margin-top:2rem; font-size:0.82rem; color:rgba(255,255,255,0.35);">February 11, 2026</p>
+    </div>
+
+    <!-- ═══ 02: AGENDA ═══ -->
+    <div class="slide bg-dark" data-slide="1">
+        <span class="slide-number">02</span>
+        <span class="confidential">Internal</span>
+        <span class="time-marker">0:00</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Agenda</p>
+            <h2 style="color:var(--white);text-align:center;">What we&rsquo;re deciding today</h2>
+            <ol class="agenda-list">
+                <li><span class="num">1</span><span class="topic">Ground rules</span><span class="time">5 min</span></li>
+                <li><span class="num">2</span><span class="topic">What are we?</span><span class="time">7 min</span></li>
+                <li><span class="num">3</span><span class="topic">Who&rsquo;s the customer?</span><span class="time">7 min</span></li>
+                <li><span class="num">4</span><span class="topic">Value prop &amp; moat</span><span class="time">5 min</span></li>
+                <li><span class="num">5</span><span class="topic">Business model</span><span class="time">7 min</span></li>
+                <li><span class="num">6</span><span class="topic">Equity &amp; governance</span><span class="time">7 min</span></li>
+                <li><span class="num">7</span><span class="topic">Repos, data &amp; process</span><span class="time">5 min</span></li>
+                <li><span class="num">8</span><span class="topic">Milestones &amp; timelines</span><span class="time">5 min</span></li>
+                <li><span class="num">9</span><span class="topic">The one-liner</span><span class="time">5 min</span></li>
+                <li><span class="num">10</span><span class="topic">Decisions recap</span><span class="time">5 min</span></li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- ═══ 03: GROUND RULES ═══ -->
+    <div class="slide" data-slide="2">
+        <span class="slide-number">03</span>
+        <span class="confidential">Internal</span>
+        <span class="time-marker">0:02</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Ground Rules</p>
+            <h2>Collaboration is not consensus</h2>
+            <p style="margin-top:0.5rem; font-size:0.95rem; color:var(--text-light); max-width:640px; text-align:center; line-height:1.6;">
+                Three equal cofounders means we need to be <strong style="color:var(--dark);">more</strong> disciplined about decisions, not less.
+                Equal equity without clear decision rights is how startups stall.
+            </p>
+            <div class="rule-grid">
+                <div class="rule-col yes">
+                    <h3 style="color:var(--green);">Collaboration</h3>
+                    <ul style="color:var(--text);">
+                        <li>Everyone contributes input</li>
+                        <li>Concerns are heard and logged</li>
+                        <li>The <strong>owner</strong> decides</li>
+                        <li>Others disagree-and-commit</li>
+                        <li>Revisit with new data, not feelings</li>
+                    </ul>
+                </div>
+                <div class="rule-col no">
+                    <h3 style="color:var(--red);">Consensus</h3>
+                    <ul style="color:var(--text);">
+                        <li>Everyone must agree to move</li>
+                        <li>Lowest common denominator wins</li>
+                        <li>One &ldquo;no&rdquo; = veto</li>
+                        <li>Revisit the same decision endlessly</li>
+                        <li>Polite stalemates kill companies</li>
+                    </ul>
+                </div>
+            </div>
+            <div style="margin-top:2rem; background:var(--white); border:2px solid var(--red); border-radius:12px; padding:1.5rem 2rem; max-width:700px; width:100%; text-align:center;">
+                <p style="font-size:1rem; color:var(--dark); line-height:1.6; font-weight:500;">
+                    Every decision today has an <strong style="color:var(--red);">owner</strong>. The owner hears input from both cofounders, then makes the call. If you&rsquo;re not the owner, your job is to give your honest take &mdash; then commit to the outcome.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 04: WHAT ARE WE? ═══ -->
+    <div class="slide" data-slide="3">
+        <span class="slide-number">04</span>
+        <span class="confidential">Internal</span>
+        <span class="time-marker">0:07</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Identity</p>
+            <h2>What kind of company is Ladybug?</h2>
+            <p style="margin-top:0.5rem; font-size:0.88rem; color:var(--text-light); max-width:600px; text-align:center; line-height:1.6;">
+                This shapes everything: how investors see us, who we hire, what partnerships we pursue, what grants we qualify for.
+            </p>
+            <div class="card-grid-4" style="margin-top:1.5rem;">
+                <div class="card option-card">
+                    <div class="option-label">Option A</div>
+                    <h3>Robotics Company</h3>
+                    <p>&ldquo;We build robots.&rdquo;</p>
+                    <div style="margin-top:0.8rem;">
+                        <div class="pro">Hardware IP, defensible</div>
+                        <div class="pro">VC loves robots right now</div>
+                        <div class="con">Capital-intensive</div>
+                        <div class="con">Competes with big labs</div>
+                    </div>
+                </div>
+                <div class="card option-card">
+                    <div class="option-label">Option B</div>
+                    <h3>Assistive Tech</h3>
+                    <p>&ldquo;We make reading accessible.&rdquo;</p>
+                    <div style="margin-top:0.8rem;">
+                        <div class="pro">Clear mission, grants</div>
+                        <div class="pro">Emotional resonance</div>
+                        <div class="con">Small market perception</div>
+                        <div class="con">May pigeonhole us</div>
+                    </div>
+                </div>
+                <div class="card option-card">
+                    <div class="option-label">Option C</div>
+                    <h3>Physical AI</h3>
+                    <p>&ldquo;Robots that perceive + act.&rdquo;</p>
+                    <div style="margin-top:0.8rem;">
+                        <div class="pro">Huge TAM, platform</div>
+                        <div class="pro">Books = wedge, not ceiling</div>
+                        <div class="con">Vague, needs proving</div>
+                        <div class="con">Harder to explain</div>
+                    </div>
+                </div>
+                <div class="card option-card">
+                    <div class="option-label">Option D</div>
+                    <h3>EdTech</h3>
+                    <p>&ldquo;We transform how kids read.&rdquo;</p>
+                    <div style="margin-top:0.8rem;">
+                        <div class="pro">Schools = ready buyer</div>
+                        <div class="pro">IDEA/ADA funding</div>
+                        <div class="con">Procurement is slow</div>
+                        <div class="con">Limits other use cases</div>
+                    </div>
+                </div>
+            </div>
+            <div class="discuss">
+                <div class="prompt-label">Decide</div>
+                <p>Which label do we lead with externally? The pitch, the website, the first line of every conversation needs one clear identity.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 05: WHO'S THE CUSTOMER? ═══ -->
+    <div class="slide" data-slide="4">
+        <span class="slide-number">05</span>
+        <span class="confidential">Internal</span>
+        <span class="time-marker">0:14</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Customer</p>
+            <h2>Who buys this? Who uses it?</h2>
+            <p style="margin-top:0.5rem; font-size:0.88rem; color:var(--text-light); max-width:600px; text-align:center; line-height:1.6;">
+                We&rsquo;re Physical AI. Books are the wedge. So who&rsquo;s the first buyer for a robot that perceives and acts &mdash; and who do we design for?
+            </p>
+            <div class="card-grid-3" style="margin-top:1.5rem;">
+                <div class="card option-card">
+                    <div class="option-label">Segment 1</div>
+                    <h3>Families</h3>
+                    <p style="margin-bottom:0.8rem;">Parents of kids with vision impairment, reading disabilities, or autism.</p>
+                    <div style="font-size:0.82rem; line-height:1.6;">
+                        <div><strong style="color:var(--dark);">Buyer:</strong> Parent</div>
+                        <div><strong style="color:var(--dark);">User:</strong> Child</div>
+                        <div><strong style="color:var(--dark);">Price:</strong> High sensitivity</div>
+                        <div><strong style="color:var(--dark);">Speed:</strong> Fast decision</div>
+                    </div>
+                </div>
+                <div class="card option-card">
+                    <div class="option-label">Segment 2</div>
+                    <h3>Schools &amp; Facilities</h3>
+                    <p style="margin-bottom:0.8rem;">Special ed, schools for the blind, assisted living. Institutional.</p>
+                    <div style="font-size:0.82rem; line-height:1.6;">
+                        <div><strong style="color:var(--dark);">Buyer:</strong> Admin / district</div>
+                        <div><strong style="color:var(--dark);">User:</strong> Student / resident</div>
+                        <div><strong style="color:var(--dark);">Price:</strong> Budget-driven</div>
+                        <div><strong style="color:var(--dark);">Speed:</strong> Slow (procurement)</div>
+                    </div>
+                </div>
+                <div class="card option-card">
+                    <div class="option-label">Segment 3</div>
+                    <h3>Libraries</h3>
+                    <p style="margin-bottom:0.8rem;">Public &amp; university libraries. Accessibility programs.</p>
+                    <div style="font-size:0.82rem; line-height:1.6;">
+                        <div><strong style="color:var(--dark);">Buyer:</strong> Director / board</div>
+                        <div><strong style="color:var(--dark);">User:</strong> Patrons</div>
+                        <div><strong style="color:var(--dark);">Price:</strong> Grant-funded</div>
+                        <div><strong style="color:var(--dark);">Speed:</strong> Medium</div>
+                    </div>
+                </div>
+            </div>
+            <div class="discuss">
+                <div class="prompt-label">Decide</div>
+                <p>Who is customer #1? We can&rsquo;t serve all three at once. Pilots are free &mdash; but the first paying customer determines the product.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 06: VALUE PROP ═══ -->
+    <div class="slide bg-warm" data-slide="5">
+        <span class="slide-number">06</span>
+        <span class="confidential">Internal</span>
+        <span class="time-marker">0:21</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Value Proposition</p>
+            <h2>Fill in the canvas</h2>
+            <p style="margin-top:0.5rem; font-size:0.88rem; color:var(--text-light); max-width:600px; text-align:center; line-height:1.6;">
+                We&rsquo;re Physical AI &mdash; robots that perceive + act. Books are the wedge. How do we frame the problem, the product, and the moat through that lens?
+            </p>
+            <div class="card-grid-3" style="margin-top:1.5rem;">
+                <div class="card" style="border-top:3px solid var(--red);">
+                    <h3 style="color:var(--red);">The Problem</h3>
+                    <p style="font-size:0.95rem; line-height:1.7; color:var(--text);">
+                        The physical world is still offline. AI reads screens &mdash; nothing reads the real world. 2.2B people with vision impairment. 90% of books have no accessible format.
+                    </p>
+                    <div style="margin-top:1rem; padding-top:0.8rem; border-top:1px solid var(--border);">
+                        <div style="font-size:0.78rem; color:var(--text-light); font-style:italic;">Books are the wedge. What&rsquo;s the broader problem we&rsquo;re really solving?</div>
+                    </div>
+                </div>
+                <div class="card" style="border-top:3px solid var(--dark);">
+                    <h3>The Solution</h3>
+                    <p style="font-size:0.95rem; line-height:1.7; color:var(--text);">
+                        A robot arm that opens a book, turns pages, reads aloud, and closes it &mdash; autonomously. Under $500.
+                    </p>
+                    <div style="margin-top:1rem; padding-top:0.8rem; border-top:1px solid var(--border);">
+                        <div style="font-size:0.78rem; color:var(--text-light); font-style:italic;">Are we selling the arm? The software? The reading experience? The platform?</div>
+                    </div>
+                </div>
+                <div class="card" style="border-top:3px solid var(--green);">
+                    <h3 style="color:var(--green);">The Moat</h3>
+                    <p style="font-size:0.95rem; line-height:1.7; color:var(--text);">
+                        Every book trains better motor policies. The arm is commodity. The intelligence isn&rsquo;t. We&rsquo;re building a dataset nobody else is collecting.
+                    </p>
+                    <div style="margin-top:1rem; padding-top:0.8rem; border-top:1px solid var(--border);">
+                        <div style="font-size:0.78rem; color:var(--text-light); font-style:italic;">Is the moat first-mover? Data flywheel? Something else?</div>
+                    </div>
+                </div>
+            </div>
+            <div class="discuss">
+                <div class="prompt-label">Decide</div>
+                <p>If a competitor built the same thing tomorrow with a better arm &mdash; what would we still have that they don&rsquo;t?</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 07: BUSINESS MODEL ═══ -->
+    <div class="slide bg-dark" data-slide="6">
+        <span class="slide-number">07</span>
+        <span class="confidential">Internal</span>
+        <span class="time-marker">0:26</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Business Model</p>
+            <h2 style="color:var(--white);text-align:center;">How do we make money?</h2>
+            <div class="card-grid-2" style="margin-top:1.5rem;">
+                <div class="card card-dark" style="border-top:3px solid var(--red-light);">
+                    <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--red-light); margin-bottom:0.5rem;">A: Sell the device</div>
+                    <h3>Hardware + Software</h3>
+                    <p>One-time sale ($400&ndash;600). Free updates.</p>
+                    <div style="margin-top:0.6rem;">
+                        <div class="pro">Simple. Families can afford.</div>
+                        <div class="con">No recurring revenue.</div>
+                    </div>
+                </div>
+                <div class="card card-dark" style="border-top:3px solid rgba(255,255,255,0.3);">
+                    <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.5); margin-bottom:0.5rem;">B: Device + subscription</div>
+                    <h3>Hardware + Monthly</h3>
+                    <p>Lower upfront ($300) + $10&ndash;20/mo for cloud AI &amp; voice.</p>
+                    <div style="margin-top:0.6rem;">
+                        <div class="pro">ARR story for investors.</div>
+                        <div class="con">Accessibility &ldquo;should be free.&rdquo;</div>
+                    </div>
+                </div>
+                <div class="card card-dark" style="border-top:3px solid rgba(255,255,255,0.3);">
+                    <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.5); margin-bottom:0.5rem;">C: Robot-as-a-Service</div>
+                    <h3>Lease to institutions</h3>
+                    <p>$100&ndash;200/mo to libraries &amp; schools. We own hardware.</p>
+                    <div style="margin-top:0.6rem;">
+                        <div class="pro">Predictable. We control hardware.</div>
+                        <div class="con">Capital-heavy to scale.</div>
+                    </div>
+                </div>
+                <div class="card card-dark" style="border-top:3px solid rgba(255,255,255,0.3);">
+                    <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.5); margin-bottom:0.5rem;">D: Platform / data</div>
+                    <h3>License the intelligence</h3>
+                    <p>Open-source arm. Sell motor-policy API to other robotics cos.</p>
+                    <div style="margin-top:0.6rem;">
+                        <div class="pro">Massive scale. Software margins.</div>
+                        <div class="con">Years away. Need huge dataset.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="discuss">
+                <div class="prompt-label">Decide</div>
+                <p>Physical AI points toward D long-term. But year 1 needs revenue. What ships first &mdash; and what story do we tell investors?</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 08: EQUITY & GOVERNANCE ═══ -->
+    <div class="slide" data-slide="7">
+        <span class="slide-number">08</span>
+        <span class="confidential">Internal</span>
+        <span class="time-marker">0:33</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Equity &amp; Governance</p>
+            <h2>The elephant in the room</h2>
+            <p style="margin-top:0.5rem; font-size:0.92rem; color:var(--text-light); max-width:640px; text-align:center; line-height:1.6;">
+                Equal equity is a statement of equal commitment. It is not a statement of equal authority on every decision.
+            </p>
+            <div class="card-grid-2" style="margin-top:1.5rem;">
+                <div class="card" style="border-top:3px solid var(--red);">
+                    <h3 style="color:var(--red);">Questions to answer now</h3>
+                    <ul style="list-style:none; font-size:0.92rem; color:var(--text); line-height:2.2;">
+                        <li style="padding-left:1.4rem; position:relative;"><span style="position:absolute; left:0; color:var(--red); font-weight:700;">1.</span> Who is CEO? Who has final call on company direction?</li>
+                        <li style="padding-left:1.4rem; position:relative;"><span style="position:absolute; left:0; color:var(--red); font-weight:700;">2.</span> What&rsquo;s the vesting schedule? (4-year with 1-year cliff is standard)</li>
+                        <li style="padding-left:1.4rem; position:relative;"><span style="position:absolute; left:0; color:var(--red); font-weight:700;">3.</span> What happens if someone leaves in month 3? Month 12?</li>
+                        <li style="padding-left:1.4rem; position:relative;"><span style="position:absolute; left:0; color:var(--red); font-weight:700;">4.</span> What&rsquo;s the time commitment expectation? Full-time? Part-time?</li>
+                    </ul>
+                </div>
+                <div class="card" style="border-top:3px solid var(--dark);">
+                    <h3>Decision domains</h3>
+                    <p style="font-size:0.88rem; color:var(--text-light); margin-bottom:1rem;">Owner = hears input, makes the call. Others disagree-and-commit.</p>
+                    <div style="font-size:0.92rem; line-height:2.2;">
+                        <div style="display:flex; gap:0.6rem; align-items:baseline;">
+                            <span class="tag tag-ac" style="flex-shrink:0;">Alison</span>
+                            <span style="color:var(--text); font-style:italic; opacity:0.4;">[fill live]</span>
+                        </div>
+                        <div style="display:flex; gap:0.6rem; align-items:baseline; margin-top:0.4rem;">
+                            <span class="tag tag-sd" style="flex-shrink:0;">Sudhir</span>
+                            <span style="color:var(--text); font-style:italic; opacity:0.4;">[fill live]</span>
+                        </div>
+                        <div style="display:flex; gap:0.6rem; align-items:baseline; margin-top:0.4rem;">
+                            <span class="tag tag-at" style="flex-shrink:0;">Andreea</span>
+                            <span style="color:var(--text); font-style:italic; opacity:0.4;">[fill live]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="discuss">
+                <div class="prompt-label">Decide &mdash; This one requires all three</div>
+                <p>This is the one decision that requires all three to agree. Everything else flows from it. Don&rsquo;t leave without an answer.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 09: REPOS & INFRASTRUCTURE ═══ -->
+    <div class="slide bg-dark" data-slide="8">
+        <span class="slide-number">09</span>
+        <span class="confidential">Internal</span>
+        <span class="time-marker">0:40</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Infrastructure</p>
+            <h2 style="color:var(--white);text-align:center;">Repos, data &amp; processes</h2>
+            <div class="repo-grid" style="margin-top:1.5rem;">
+                <div class="repo-card" style="border-top:3px solid var(--red-light);">
+                    <div class="repo-type" style="color:var(--red-light);">Private Repo</div>
+                    <h4>ladybug-robotics-private</h4>
+                    <ul>
+                        <li>All source code (src/)</li>
+                        <li>Motor skills, orchestrator</li>
+                        <li>Perception pipeline</li>
+                        <li>Config, tests, main.py</li>
+                        <li>Internal docs (PROJECT_DOCS/)</li>
+                    </ul>
+                </div>
+                <div class="repo-card" style="border-top:3px solid rgba(255,255,255,0.3);">
+                    <div class="repo-type" style="color:rgba(255,255,255,0.5);">Public Repo</div>
+                    <h4>ladybugs-robotics</h4>
+                    <ul>
+                        <li>Public-facing README</li>
+                        <li>Demo assets</li>
+                        <li>Setup instructions</li>
+                        <li>No source code</li>
+                    </ul>
+                </div>
+                <div class="repo-card" style="border-top:3px solid rgba(255,255,255,0.3);">
+                    <div class="repo-type" style="color:rgba(255,255,255,0.5);">GitHub Pages</div>
+                    <h4>ladybug.bot</h4>
+                    <ul>
+                        <li>Marketing site</li>
+                        <li>Custom domain CNAME</li>
+                        <li>Pitch deck</li>
+                        <li>Public-facing only</li>
+                    </ul>
+                </div>
+            </div>
+            <div style="margin-top:1.5rem; max-width:900px; width:100%;">
+                <div style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--red-light); margin-bottom:0.8rem;">HuggingFace</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem;">
+                    <div class="repo-card" style="border-top:none; border-left:3px solid var(--yellow);">
+                        <h4 style="font-size:0.82rem;">Datasets (planned)</h4>
+                        <ul>
+                            <li>ladybugs_open_book</li>
+                            <li>ladybugs_close_book</li>
+                            <li>ladybugs_turn_page</li>
+                        </ul>
+                        <p style="margin-top:0.5rem;">Teleop recordings. LeRobot v2.1 format.</p>
+                    </div>
+                    <div class="repo-card" style="border-top:none; border-left:3px solid var(--yellow);">
+                        <h4 style="font-size:0.82rem;">Policies (planned)</h4>
+                        <ul>
+                            <li>ladybugs/open_book_ACT</li>
+                            <li>ladybugs/close_book_ACT</li>
+                            <li>ladybugs/turn_page_ACT</li>
+                        </ul>
+                        <p style="margin-top:0.5rem;">ACT checkpoints. ~80M params each.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="discuss">
+                <div class="prompt-label">Decide</div>
+                <p>HF org name? Credentials ownership? Dataset visibility? Branching/PR workflow for private repo?</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ 10: MILESTONES ═══ -->
+    <div class="slide" data-slide="9">
+        <span class="slide-number">10</span>
+        <span class="confidential">Internal</span>
+        <span class="time-marker">0:45</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Milestones</p>
+            <h2>What has to happen, in what order</h2>
+            <p style="margin-top:0.4rem; font-size:0.88rem; color:var(--text-light); max-width:600px; text-align:center; line-height:1.6;">
+                Owners and hard dates come out of today&rsquo;s conversation. This is the sequence.
+            </p>
+            <table class="decision-table" style="margin-top:1rem; font-size:0.82rem;">
+                <thead>
+                    <tr>
+                        <th style="width:15%;">When</th>
+                        <th style="width:30%;">Milestone</th>
+                        <th>Deliverable / Gate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight:700; color:var(--red);">Month 1</td>
+                        <td>Book inventory acquired</td>
+                        <td>100 books across 5 P1 types in the lab</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:700; color:var(--red);">Month 1&ndash;2</td>
+                        <td>All arms calibrated &amp; recording</td>
+                        <td>Each cofounder recording episodes at home</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:700; color:var(--red);">Month 2</td>
+                        <td>Cross-site data pipeline</td>
+                        <td>Episodes from all sites merging into one HF dataset</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:700; color:var(--red);">Month 2&ndash;3</td>
+                        <td>Dataset quality gate</td>
+                        <td>Combined dataset validated. Green light to train.</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:700;">Month 3</td>
+                        <td>80% reliability on 3+ types</td>
+                        <td><strong style="color:var(--red);">Lab gate.</strong> Demo-ready for partners.</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:700;">Month 4</td>
+                        <td>First library LOI signed</td>
+                        <td>At least 1 library commits to pilot.</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:700;">Month 5</td>
+                        <td>95% reliability across P1</td>
+                        <td><strong style="color:var(--red);">Pilot gate.</strong> Ship units to libraries.</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:700;">Month 6</td>
+                        <td>3 library pilots live</td>
+                        <td>Robots reading books in the wild. Data flowing back.</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:700;">Month 8</td>
+                        <td>Pilot review &amp; go/no-go</td>
+                        <td>Feedback compiled. Decision on schools. Pricing validated.</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:700;">Month 10</td>
+                        <td>Manufacturing partner signed</td>
+                        <td>Can produce 50 units at target BOM.</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:700;">Month 12</td>
+                        <td>50 beta units shipped</td>
+                        <td><strong style="color:var(--red);">Commercial gate.</strong> Revenue begins.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══ 11: ONE-LINER ═══ -->
+    <div class="slide bg-red" data-slide="10">
+        <span class="slide-number">11</span>
+        <span class="confidential" style="color:rgba(255,255,255,0.4);">Internal</span>
+        <span class="time-marker">0:50</span>
+        <p class="eyebrow">The One-Liner</p>
+        <h1>Can we say what we do in <em>one sentence</em>?</h1>
+        <p style="margin-top:0.6rem; font-size:0.88rem; color:rgba(255,255,255,0.6); max-width:600px; text-align:center; line-height:1.6;">
+            We&rsquo;re Physical AI. We know the customer and the business model. Now distill it.
+        </p>
+        <div style="margin-top:2rem; max-width:700px; width:100%;">
+            <div style="background:rgba(255,255,255,0.12); border-radius:12px; padding:1.5rem 2rem; margin-bottom:1rem;">
+                <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.5); margin-bottom:0.5rem;">Pitch version</div>
+                <p style="font-size:1.1rem; color:var(--white); line-height:1.6;">&ldquo;Ladybug builds robots that see, touch, and speak &mdash; starting with reading physical books aloud.&rdquo;</p>
+            </div>
+            <div style="background:rgba(255,255,255,0.12); border-radius:12px; padding:1.5rem 2rem; margin-bottom:1rem;">
+                <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.5); margin-bottom:0.5rem;">Mission version</div>
+                <p style="font-size:1.1rem; color:var(--white); line-height:1.6;">&ldquo;We make physical books accessible to everyone who can&rsquo;t read them on their own.&rdquo;</p>
+            </div>
+            <div style="background:rgba(255,255,255,0.12); border-radius:12px; padding:1.5rem 2rem;">
+                <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.5); margin-bottom:0.5rem;">Platform version</div>
+                <p style="font-size:1.1rem; color:var(--white); line-height:1.6;">&ldquo;We teach robots to interact with the physical world &mdash; see it, manipulate it, communicate about it.&rdquo;</p>
+            </div>
+        </div>
+        <p style="margin-top:1.5rem; font-size:0.88rem; color:rgba(255,255,255,0.6); text-align:center;">Pick one, rewrite one, or start fresh. This is what we say everywhere.</p>
+    </div>
+
+    <!-- ═══ 12: DECISIONS ═══ -->
+    <div class="slide bg-dark" data-slide="11">
+        <span class="slide-number">12</span>
+        <span class="confidential">Internal</span>
+        <span class="time-marker">0:55</span>
+        <div class="slide-body" style="display:flex;flex-direction:column;align-items:center;">
+            <p class="eyebrow">Decisions</p>
+            <h2 style="color:var(--white);text-align:center;">What we decided today</h2>
+            <table class="decision-table" style="margin-top:1.5rem;">
+                <thead>
+                    <tr>
+                        <th style="width:40%;">Decision</th>
+                        <th>Answer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>What kind of company are we?</td>
+                        <td><strong>Physical AI.</strong> Robots that perceive + act. Books are the wedge, not the ceiling.</td>
+                    </tr>
+                    <tr>
+                        <td>Primary customer segment</td>
+                        <td style="color:rgba(255,255,255,0.35); font-style:italic;">[fill live]</td>
+                    </tr>
+                    <tr>
+                        <td>Revenue model (year 1)</td>
+                        <td style="color:rgba(255,255,255,0.35); font-style:italic;">[fill live]</td>
+                    </tr>
+                    <tr>
+                        <td>CEO / decision authority</td>
+                        <td style="color:rgba(255,255,255,0.35); font-style:italic;">[fill live]</td>
+                    </tr>
+                    <tr>
+                        <td>Vesting terms</td>
+                        <td style="color:rgba(255,255,255,0.35); font-style:italic;">[fill live]</td>
+                    </tr>
+                    <tr>
+                        <td>Time commitment expectation</td>
+                        <td style="color:rgba(255,255,255,0.35); font-style:italic;">[fill live]</td>
+                    </tr>
+                    <tr>
+                        <td>HuggingFace org &amp; visibility</td>
+                        <td style="color:rgba(255,255,255,0.35); font-style:italic;">[fill live]</td>
+                    </tr>
+                    <tr>
+                        <td>Branching / PR workflow</td>
+                        <td style="color:rgba(255,255,255,0.35); font-style:italic;">[fill live]</td>
+                    </tr>
+                    <tr>
+                        <td>The one-liner</td>
+                        <td style="color:rgba(255,255,255,0.35); font-style:italic;">[fill live]</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="subtitle" style="margin-top:2rem;">
+                <img src="logo_transparent.png" alt="" style="height:28px; width:auto; vertical-align:middle; margin-right:0.5rem; opacity:0.4;">
+                Fill this live. Walk out with answers, not action items.
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<!-- SIDE NAV -->
+<nav class="side-nav" id="side-nav">
+    <a data-go="0">Session</a>
+    <a data-go="1">Agenda</a>
+    <a data-go="2">Ground Rules</a>
+    <a data-go="3">Identity</a>
+    <a data-go="4">Customer</a>
+    <a data-go="5">Value Prop</a>
+    <a data-go="6">Biz Model</a>
+    <a data-go="7">Equity</a>
+    <a data-go="8">Infrastructure</a>
+    <a data-go="9">Milestones</a>
+    <a data-go="10">One-Liner</a>
+    <a data-go="11">Decisions</a>
+</nav>
+
+<!-- CONTROLS -->
+<div class="controls">
+    <button id="prev-btn" aria-label="Previous slide">&larr;</button>
+    <span class="progress" id="progress">1 / 12</span>
+    <button id="next-btn" aria-label="Next slide">&rarr;</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+const navLinks = document.querySelectorAll('#side-nav a');
+const nav = document.getElementById('side-nav');
+let current = 0;
+
+function goTo(n) {
+    if (n < 0 || n >= total) return;
+    slides[current].classList.remove('active');
+    current = n;
+    slides[current].classList.add('active');
+    document.getElementById('progress').textContent = (current + 1) + ' / ' + total;
+    navLinks.forEach((a, i) => a.classList.toggle('active', i === current));
+    const isDark = slides[current].classList.contains('bg-dark') || slides[current].classList.contains('bg-red');
+    nav.classList.toggle('on-dark', isDark);
+}
+
+document.getElementById('prev-btn').addEventListener('click', () => goTo(current - 1));
+document.getElementById('next-btn').addEventListener('click', () => goTo(current + 1));
+
+nav.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-go]');
+    if (a) goTo(parseInt(a.dataset.go));
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(current - 1); }
+    if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+    if (e.key === 'End') { e.preventDefault(); goTo(total - 1); }
+});
+
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) { diff > 0 ? goTo(current + 1) : goTo(current - 1); }
+});
+
+// Inject watermark logo
+slides.forEach((s) => {
+    if (s.querySelector('.logo-mark')) return;
+    const img = document.createElement('img');
+    img.src = 'logo_transparent.png';
+    img.alt = '';
+    img.className = 'logo-watermark';
+    s.appendChild(img);
+});
+
+// Inject DRAFT watermark
+slides.forEach((s) => {
+    const d = document.createElement('span');
+    d.className = 'draft-watermark';
+    d.textContent = 'DRAFT';
+    s.appendChild(d);
+});
+
+goTo(0);
+</script>
+
+</body>
+</html>
