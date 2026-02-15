@@ -268,13 +268,17 @@ python main.py
 | Robotic arm | SO-101 + Solo-CLI |
 | Motor learning | ACT policy (Action Chunking with Transformers) |
 | Motor execution | Solo CLI via pexpect wrapper |
-| Scene understanding | Claude Vision (Anthropic API) |
-| Page reading | Claude Vision streaming |
+| Scene understanding | Google Gemini (Google API) |
+| Page reading | Gemini Vision streaming |
 | Text-to-speech | ElevenLabs streaming API |
 | Camera | OpenCV (persistent stream) |
 | Language | Python |
 
 ## Team
+
+**Ladybugs Robotics** -- Labllab AI Launch & Fund Your Own Startup 2026, San Francisco
+
+Technical Team: Alison Cossette, Sudhir Dadi
 
 **Ladybugs Robotics** -- Physical AI Hack 2026, San Francisco
 
