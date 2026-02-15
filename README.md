@@ -5,7 +5,7 @@
 **Physical AI Hack 2026 -- San Francisco, Jan 31 - Feb 1**
 **Winner Best Overall/Most Impressive Project""
 
-**Resources:** [Investor Pitch Deck](pitch.html) | [Project Website](index.html)
+**Resources:** [Investor Pitch Deck](https://ladybug.bot/lablab-pitch.html) | [Project Website](https://ladybug.bot/index.html)
 
 ---
 
