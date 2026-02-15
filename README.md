@@ -5,6 +5,8 @@
 **Physical AI Hack 2026 -- San Francisco, Jan 31 - Feb 1**
 **Winner Best Overall/Most Impressive Project""
 
+**Resources:** [Investor Pitch Deck](pitch.html) | [Project Website](index.html)
+
 ---
 
 <div align="center">
