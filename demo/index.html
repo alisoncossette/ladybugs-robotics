@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ladybug Robotics &mdash; Orchestration Walkthrough</title>
+    <link rel="stylesheet" href="css/walkthrough.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ═══ CONTROL BAR ═══ -->
+<header class="control-bar">
+    <div class="control-bar-left">
+        <img src="images/logo.png" alt="Ladybug Robotics" class="logo">
+        <h1>Orchestration Walkthrough</h1>
+    </div>
+    <div class="control-bar-right">
+        <div class="toggle-group">
+            <button class="toggle-btn active" id="btn-prerecorded">Pre-recorded</button>
+            <button class="toggle-btn" id="btn-live">Live API</button>
+            <span class="live-dot" id="live-dot" title="API status"></span>
+        </div>
+        <div class="toggle-group">
+            <button class="toggle-btn active" id="btn-verbose">Verbose</button>
+            <button class="toggle-btn" id="btn-skim">Skim</button>
+        </div>
+        <div class="playback-controls">
+            <button class="play-btn" id="btn-play" title="Play">&#9654;</button>
+            <button class="play-btn" id="btn-pause" title="Pause" style="display:none;">&#9646;&#9646;</button>
+            <button class="play-btn" id="btn-step" title="Step Forward">&#9197;</button>
+            <select class="speed-select" id="speed-select">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="4">4x</option>
+            </select>
+        </div>
+    </div>
+</header>
+
+<!-- ═══ MAIN LAYOUT ═══ -->
+<main class="walkthrough">
+
+    <!-- LEFT: THE BRAIN -->
+    <section class="brain-panel" id="brain-panel">
+        <div class="panel-header">
+            <span class="panel-eyebrow">The Brain</span>
+            <span class="panel-subtitle">Decision pipeline</span>
+        </div>
+        <div class="timeline" id="timeline">
+            <!-- Steps are injected by JS -->
+        </div>
+    </section>
+
+    <!-- RIGHT: THE BOOK -->
+    <section class="book-panel" id="book-panel">
+        <div class="panel-header">
+            <span class="panel-eyebrow">The Book</span>
+            <span class="panel-subtitle" id="book-info">Waiting to start...</span>
+        </div>
+        <div class="book-frame" id="book-frame">
+            <img src="images/spread-closed.jpg" alt="Book state" id="book-image">
+            <div class="motor-overlay" id="motor-overlay" style="display:none;">
+                <img src="" alt="Motor skill animation" id="motor-gif">
+                <div class="motor-label" id="motor-label"></div>
+            </div>
+        </div>
+        <div class="extracted-text-area">
+            <div class="text-header">
+                <span class="text-label" id="text-label">Extracted Text</span>
+                <span class="word-count" id="word-count"></span>
+            </div>
+            <div class="text-content" id="text-content">
+                <span class="cursor" id="cursor"></span>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ═══ SESSION COMPLETE OVERLAY ═══ -->
+<div class="session-complete" id="session-complete" style="display:none;">
+    <div class="complete-card">
+        <h2>Session Complete</h2>
+        <p>The robot successfully read the entire book.</p>
+        <div class="complete-stats" id="complete-stats"></div>
+        <button class="restart-btn" id="btn-restart">Restart Walkthrough</button>
+    </div>
+</div>
+
+<audio id="audio-player" preload="none"></audio>
+
+<script src="js/prerecorded-data.js"></script>
+<script src="js/live-api.js"></script>
+<script src="js/walkthrough.js"></script>
+
+</body>
+</html>

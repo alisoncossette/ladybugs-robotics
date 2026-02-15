@@ -14,6 +14,7 @@ import sys
 import time
 
 from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -31,6 +32,19 @@ app = FastAPI(
     title="Ladybug Robotics — Perception API",
     description="The robot's brain, running in the cloud.",
     version="1.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://walkthrough-*.run.app",  # Cloud Run
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "https://ladybug.bot",
+    ],
+    allow_origin_regex=r"https://walkthrough.*\.run\.app",
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")

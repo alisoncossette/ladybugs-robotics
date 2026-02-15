@@ -1,0 +1,59 @@
+name: Deploy Walkthrough to Cloud Run
+
+on:
+  push:
+    branches: [hackathon/web-app]
+    paths:
+      - 'demo/**'
+      - 'web/Dockerfile'
+      - 'web/nginx.conf'
+      - '.github/workflows/deploy-walkthrough.yaml'
+
+env:
+  PROJECT_ID: ladybug-robotics
+  REGION: us-central1
+  SERVICE: walkthrough
+  REPO: walkthrough
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push container
+        run: |
+          IMAGE=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.SERVICE }}:${{ github.sha }}
+          docker build -t $IMAGE -f web/Dockerfile .
+          docker push $IMAGE
+
+      - name: Deploy to Cloud Run
+        run: |
+          IMAGE=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.SERVICE }}:${{ github.sha }}
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image $IMAGE \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --memory 256Mi \
+            --cpu 1 \
+            --port 8080 \
+            --max-instances 3
