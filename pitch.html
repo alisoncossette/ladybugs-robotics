@@ -397,11 +397,17 @@
         .bg-red .logo-watermark { opacity: 0.1; filter: brightness(3) saturate(0); }
 
         @media (max-width: 768px) {
-            .slide { padding: 3rem 2rem; }
-            .half, .card-grid-3, .team-row, .ask-grid, .stats, .expand-grid {
+            .slide { padding: 2rem 1.5rem; overflow-y: auto; }
+            .half, .card-grid-3, .team-row, .ask-grid, .stats, .expand-grid, .card-grid-2 {
                 grid-template-columns: 1fr;
             }
             .side-nav { display: none; }
+            .slide h1 { font-size: 1.8rem; }
+            .slide h1.hero { font-size: 2.2rem; }
+            .slide h2 { font-size: 1.4rem; }
+            .subtitle { font-size: 0.95rem; }
+            .slide-body { max-width: 100%; }
+            .controls button { width: 38px; height: 38px; }
         }
     </style>
 </head>
