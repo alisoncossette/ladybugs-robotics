@@ -961,6 +961,9 @@ function goTo(n) {
     slides[current].classList.add('active');
     document.getElementById('progress').textContent = (current + 1) + ' / ' + total;
 
+    // Scroll to top on mobile
+    window.scrollTo(0, 0);
+
     // Update side nav
     navLinks.forEach((a, i) => a.classList.toggle('active', i === current));
     const isDark = slides[current].classList.contains('bg-dark') || slides[current].classList.contains('bg-red');
@@ -985,12 +988,19 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'End') { e.preventDefault(); goTo(total - 1); }
 });
 
-// Touch
-let touchStartX = 0;
-document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+// Touch — require deliberate horizontal swipe, ignore vertical scrolling
+let touchStartX = 0, touchStartY = 0;
+document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+});
 document.addEventListener('touchend', (e) => {
-    const diff = touchStartX - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) { diff > 0 ? goTo(current + 1) : goTo(current - 1); }
+    const dx = touchStartX - e.changedTouches[0].clientX;
+    const dy = touchStartY - e.changedTouches[0].clientY;
+    // Only trigger if horizontal swipe is dominant and > 80px
+    if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 2) {
+        dx > 0 ? goTo(current + 1) : goTo(current - 1);
+    }
 });
 
 // Inject watermark logo on every slide that doesn't have one
