@@ -397,7 +397,19 @@
         .bg-red .logo-watermark { opacity: 0.1; filter: brightness(3) saturate(0); }
 
         @media (max-width: 768px) {
-            .slide { padding: 2rem 1.5rem; overflow-y: auto; }
+            html, body { overflow: visible; height: auto; }
+            .deck { height: auto; }
+            .slide {
+                position: relative;
+                height: auto;
+                min-height: 100vh;
+                padding: 2rem 1.5rem 5rem;
+                opacity: 1;
+                pointer-events: auto;
+                transform: none;
+                display: none;
+            }
+            .slide.active { display: flex; }
             .half, .card-grid-3, .team-row, .ask-grid, .stats, .expand-grid, .card-grid-2 {
                 grid-template-columns: 1fr;
             }
